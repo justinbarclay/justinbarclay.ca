@@ -1,0 +1,41 @@
+@@html:<div class="avatar center" onClick="swapBios()">@@
+[[/images/profile.jpg]]
+@@html:</div>@@
+
+* Justin Barclay
+#+ATTR_HTML: :id short-bio
+** 
+#+BEGIN_QUOTE
+"What? No... Justin stop that! You're going to break it." - Everyone I've ever worked for
+#+END_QUOTE
+
+An amateur developer since 2014 
+
+ - 2010 if you count R and Java.
+
+A text editor enthusiast since 2016
+
+A disappointment since 1986
+
+** 
+#+ATTR_HTML: :id long-bio :class hidden
+#+BEGIN_QUOTE
+Hi, I'm Justin, a full-stack developer with an unhealthy obsession for Lisp and Rust. While everyone else is busy mastering the latest web frameworks, I'm over here trying to wrap my head around the lifetime of macros. My colleagues think I'm crazy for insisting on using a text editor and language family that were last popular in the 80s, but I just can't help myself. Despite my quirks, I'm dedicated to writing code that is clean, efficient, and, most importantly, doesn't crash and burn at the first sign of trouble (although that's been known to happen more often than I care to admit).
+
+- As written by Chat-GPT
+#+END_QUOTE
+#+BEGIN_EXPORT html
+<script>
+  const swapBios = () => {
+  const shortBio = document.getElementById("short-bio");
+   const longBio = document.getElementById("long-bio");
+   if(shortBio.className.includes("hidden")){
+     shortBio.classList.toggle("hidden");
+     longBio.classList.toggle("hidden");
+   } else {
+     longBio.classList.toggle("hidden");
+     shortBio.classList.toggle("hidden");
+   }
+ }
+</script>
+#+END_EXPORT

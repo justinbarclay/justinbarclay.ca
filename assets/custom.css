@@ -1,0 +1,46 @@
+.navigation {
+  background-color: #212121;
+  position: fixed;
+  top: 0%;
+  width: 100%;
+}
+
+body.colorscheme-light nav {
+  background-color: #fafafa;
+}
+
+.content {
+  margin-top: 6rem;
+}
+
+table {
+  color: #fff;
+  border-spacing: 1em;
+  border-radius: 0.375em;
+  background: #282a36;
+  width: 100%;
+  padding-bottom: 0;
+}
+
+body.colorscheme-light table * {
+  border-color: #fff;
+}
+
+thead {
+  text-align: left;
+}
+
+.center{
+  display: flex;
+  justify-content: center;
+}
+.avatar img{
+  width: 60vw;
+  max-width: 500px;
+}
+.hidden {
+  display: none;
+}
+.table-scroll{
+  overflow-x: auto;
+}
