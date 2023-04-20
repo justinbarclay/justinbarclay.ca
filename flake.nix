@@ -35,7 +35,7 @@
         in
         {
           default = pkgs.mkShell {
-            buildInputs = with pkgs; [ git hugo ];
+            buildInputs = with pkgs; [ hugo ];
           };
         });
 
