@@ -11,6 +11,7 @@ paginate = 20
 pygmentsstyle = "dracula"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
+enableRobotsTXT = true
 
 [params]
   author = "Justin Barclay"
