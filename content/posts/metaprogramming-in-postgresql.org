@@ -8,7 +8,7 @@
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
-#+tags[]: postgresql, metaprogramming, gitpod, playground, emacs
+#+tags[]: postgresql metaprogramming gitpod playground emacs
 #+hugo_section: ./posts
 #+hugo_weight: 2001
 #+hugo_auto_set_lastmod: t
@@ -57,7 +57,7 @@ Before I scare you with a lovecraftian horror of SQL, a behemoth 200 line schema
 Note: If you have something gnawing on your amygdala at 3 am, it's probably not something SQL will cure. I suggest finding a witch doctor.
 #+END_QUOTE
 
-If you are already an expert SQList, feel free to [[* Love and War and Cthulu][skip this section]].
+If you are already an expert SQList, feel free to [[#headline-7][skip this section]].
 *** SQL Functions
 In the code block below is a simple version of the function syntax. Some items are optional, like, you don't need to have an ~OR~ or a ~REPLACE~, you don't need to have any arguments, and you don't have to declare any variables.
 
