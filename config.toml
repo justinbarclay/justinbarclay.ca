@@ -56,8 +56,8 @@ pygmentscodefencesguesssyntax = true
   name = "Mastodon"
   icon = "fa fa-mastodon fa-2x"
   weight = 2
+  rel = "me"
   url = "https://hachyderm.io/@newplagiarist"
-
 # Menu links
 [[menu.main]]
   name = "Blog"
