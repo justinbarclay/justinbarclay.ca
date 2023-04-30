@@ -19,10 +19,6 @@ enableRobotsTXT = true
   description = "They say time spent on this blog is definitely spent time"
   keywords = "blog,developer,personal"
   avatarurl = "images/portrait.jpg"
-
-  favicon_32 = "/img/favicon-32x32.png"
-  favicon_16 = "/img/favicon-16x16.png"
-
   since = 2017
 
   enableTwemoji = true
@@ -59,6 +55,14 @@ enableRobotsTXT = true
   weight = 2
   rel = "me"
   url = "https://hachyderm.io/@newplagiarist"
+[[params.social]]
+  name = "RSS"
+  icon = "fa fa-2x fa-rss"
+  weight = 6
+  rel = "alternate"
+  url = "/index.xml"
+  type = "application/rss+xml"
+
 # Menu links
 [[menu.main]]
   name = "Blog"
