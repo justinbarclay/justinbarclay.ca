@@ -1,3 +1,4 @@
+#+title: About
 @@html:<div class="avatar center" onClick="swapBios()">@@
 [[/images/profile.jpg]]
 @@html:</div>@@
