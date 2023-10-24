@@ -1,0 +1,139 @@
+#+OPTIONS: ^:nil toc:nil
+#+TITLE: Sharpening Your Toolshed: Automating git-sync
+#+date: <2023-10-24 Tue>
+#+author: Justin Barclay
+#+description: How to automate git-sync by creating an Emacs minor mode
+#+section: ./posts
+#+weight: 2001
+#+auto_set_lastmod: t
+#+tags[]: emacs git minor-mode sharpening-your-toolshed
+
+@@html:<div class="banner-image">@@
+#+attr_html: :alt "Two programmers sharpening the first toolshed"
+[[/ox-hugo/sharpening-your-toolshed.png]]
+
+@@html:</div>@@
+
+I've been trying to write more this year. To help with that, I've embraced the idea of diarying. Since I primarily use a computer for writing, I wanted a tool that could foster a more interconnected thinking style. That's when I stumbled upon  [[https://github.com/org-roam/org-roam][org-roam]], an extension for  [[https://orgmode.org/][org-mode]] that seamlessly integrates with the [[https://en.wikipedia.org/wiki/Zettelkasten][Zettelkasten]] style of note-taking.
+
+I value ~org-mode~ for its straightforward syntax, which enables me to write simple notes. For my most basic needs, I often record a quote and a link to its source
+#+begin_src org-mode
+#+title: Zettelkasten
+
+#+begin_quote
+A Zettelkasten (German for "slip box," plural Zettelkästen) or card file consists of small items of information stored on paper slips or cards that may be linked to each other through subject headings or other metadata such as numbers and tags. It has often been used as a system of note-taking and personal knowledge management for research, study, and writing.
+
+In the 1980s, the card file began to be used as metaphor in the interface of some hypertextual personal knowledge base software applications such as NoteCards. In the 1990s, such software inspired the invention of wikis.
+#+end_quote
+* Link
+https://en.wikipedia.org/wiki/Zettelkasten
+#+end_src
+
+Yet, there are times when my notes take on a more complicated form, such as a comprehensive development journal complete with images, links, citations, and live code examples -— much like a [[https://jupyter.org/][Jupyter Notebook]].
+
+#+begin_src org-mode
+We know we can talk to SSH on Windows, but can we still gain access to 1Password? Well, we can verify that by calling ssh-add.exe:
+
+#+begin_src powershell
+ssh-add.exe -L
+
+# or /mnt/c/WINDOWS/System32/OpenSSH//ssh-add.exe -L
+\#+end_src 
+And it should show you the SSH keys you have stored in 1Password:
+
+#+RESULTS:
+| ssh-ed25519 | AAAAC3NzaC1lZDI1NTE5AAAAIGFbygxEvFlS66vaugGRlbXR12yjozS8G+yYrK23lmZo | SSH | Signing | Key |
+| ssh-ed25519 | AAAAC3NzaC1lZDI1NTE5AAAAIHyfKl/29RIys3r+UsyM6ODnh04tI01iUBeBjornOrnl | SSH | Auth    | Key |
+#+end_quote
+#+end_src
+
+I like that org-roam allows for more networked thoughts similar to tools like [[https://roamresearch.com/][Roam]] or [[https://obsidian.md/][Obsidian]]. ~org-roam~ focuses on being plain text first and enhancing the writing experience from there. Due to this, it is a portable format and allows me to write anywhere I have a computer and a text editor.
+
+The idea of plain text being portable and under my control, rather than living on someone else's computer by default, is compelling. However, there is still the challenge where I need my writing to exist across multiple machines and platforms. Ideally, I'd have my notes accessible from all my computers.
+
+~org-roam~ falls slightly short when compared to its competitors. It doesn't offer cloud synchronization. While I appreciate the privacy of having my data live locally, I also value convenience. Therefore, I'd like to find a solution that allows files to sync with minimal input, ensuring a smooth transition from one machine to another without disrupting my workflow.
+
+Moreover, I'd prefer a solution that's versatile, compatible across macOS, Linux, and Windows, and capable of working seamlessly with Git. Using Git would provide the best of both worlds – cloud-like convenience under my terms and the security of owning my data.
+
+This is where [[https://github.com/simonthum/git-sync][git-sync]] comes into play. ~git-sync~ is a simple bash [[https://github.com/simonthum/git-sync/blob/master/git-sync][script]] that runs something akin to git fetch + commit + push.
+
+~git-sync~ does come with a significant downside: the user has to trigger a sync operation themselves. It's not all gloom and doom; however, there are ways to automate the task. For instance, you could use something like [[https://linux.die.net/man/7/inotify][inotify]] to trigger git-sync. Unfortunately, [[https://en.wikipedia.org/wiki/Inotify][inotify]] is Linux only.
+
+Luckily, I have another solution, one that uses a Lisp. So it's much nicer to script in than something like bash (🤮). The solution, obviously, is [[https://www.gnu.org/software/emacs/][Emacs]].
+
+Emacs has a bunch of [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Hooks.html][hooks]] that allow you to modify the system after an event. For instance, the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Saving-Buffers.html#index-after_002dsave_002dhook][after-save-hook]], which is the hook we want to use, runs a list of functions after a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Buffers.html][buffer]] is saved. So, all we have to do is call ~git-sync~ after the user saves the buffer.
+
+So, if we evaluate the function below, Emacs will call ~git-sync~ every time a file is saved. 
+
+#+begin_src elisp
+  (add-to-list 'after-save-hook (lambda () (async-shell-command  "git-sync -n -s")))
+#+end_src
+
+But this also raises a problem. Emacs will call git-sync every time a file is saved. Even on the files, I don't want to be saved. I only want it to run when _specific_ files are saved. Luckily, we can accomplish this by using ~setq-local~.
+
+You could think of ~add-to-list~ as:
+#+begin_src elisp
+  (setq after-save-hook (cons (lambda () (async-shell-command  "git-sync -n -s")) after-save-hook))
+#+end_src
+
+So, we need to replace ~setq~ with ~setq-local~, and we'll have git-sync only run in the current buffer.
+#+begin_src elisp
+(setq-local after-save-hook (cons (lambda () (async-shell-command  "git-sync -n -s")) after-save-hook))
+#+end_src
+
+If I formalize this lambda into a function, ~git-sync-after-save~, things become a bit easier to read:
+#+begin_src elisp
+  (defun git-sync-after-save ()
+   (async-shell-command  "git-sync -n -s"))
+#+end_src
+
+But they also make it so that some things are easier to clean up as well
+
+#+begin_src emacs-lisp
+  (remove 'git-sync-after-save after-save-hook)
+#+end_src
+
+I now know how to get git-sync to run across all buffers in Emacs or for a single buffer. However, remember, I want to automate this. So, I want Emacs to run git-sync for me only on specific projects.
+
+We can use a feature in Emacs' called [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Minor-Modes.html][minor modes]].
+
+#+begin_quote
+A minor mode is an optional editing mode that alters the behaviour of Emacs in some well-defined way.
+ - Gnu Emacs'
+#+end_quote
+
+To define a minor mode, you call the macro [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Minor-Modes.html][~define-minor-mode~]] and pass it a plist with the keys ~:global~, ~:init-value~, ~:lighter~, ~:keymap~, ~:variable~, ~:after-hook~, ~:interactive~. But we only really care about ~:lighter~, and ~:after-hook~. ~:lighter~ is a string that displays in the mode line as an indicator that the minor mode is active. And ~:after-hook~ is a lisp form that Emacs will run when the minor mode is activated and deactivated.
+
+#+begin_src elisp
+  (:after-hook (if some-minor-mode
+                   (message "we're doing some work for some-minor-mode")
+                 (message "we're cleaning up from some-minor-mode")))
+#+end_src
+
+But for our ~:after-hook~, we simply need to add or remove the ~git-sync-after-save-hook~ to the buffer-local ~after-save-hook~ list.
+#+begin_src elisp
+  (define-minor-mode git-sync-mode
+    ;; Add minor mode documentation here
+    "A minor mode to run git-sync on save."
+    :lighter " git-sync"
+    :after-hook (if git-sync-mode
+                    (setq-local after-save-hook (cons 'git-sync-after-save-hook after-save-hook))
+                  (setq-local after-save-hook (remove 'git-sync-after-save-hook after-save-hook))))
+#+end_src
+
+Now that we have defined ~git-sync-mode~, we need to figure out how to turn it on. For that, I am going to keep things simple and use [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Directory-Variables.html][.dir-locals.el]] to turn on ~git-sync-mode~ in the appropriate directories. ~.dir-locals.el~ is Emacs' way of defining directory local variables, kind of like a [[https://www.ibm.com/docs/en/aix/7.2?topic=files-env-file][.env]] file.
+
+A ~.dir-locals.el~ file is written as a list of cons cells with the major mode and the list of variable/value pairs.
+#+begin_src elisp
+((major-mode . ((some-variable some-value))))
+#+end_src
+
+But we want ~git-sync-mode~ to run in all major modes. So, instead of associating git-sync with a specific major mode, we can associate it with ~nil~, which will tell Emacs to set these variables in every buffer associated with this directory.
+#+begin_src elisp :tangle .dir-locals.el
+((nil . ((mode . git-sync-mode))))
+#+end_src
+
+And that is the beauty of minor modes. Users can use little programs to modify their buffers and files or attach behaviour to their buffers.
+
+#+attr_html: :style font-style: italic;
+Build small tools for yourself. After all, our toolsheds aren't going to sharpen themselves.

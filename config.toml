@@ -40,7 +40,7 @@ enableRobotsTXT = true
 [taxonomies]
   category = "categories"
   series = "series"
-  tag = "tags"
+  # tag = "tags"
   author = "authors"
 
 # Social links

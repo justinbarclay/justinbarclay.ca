@@ -41,6 +41,7 @@ thead {
 .hidden {
   display: none;
 }
+
 .table-scroll{
   overflow-x: auto;
 }
@@ -56,4 +57,22 @@ thead {
 .footnote-body {
   display: inline-block;
   padding-left: 1rem;
+}
+
+.banner-image {
+  z-index: -1;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  text-align: center;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+figcaption {
+  margin: 1rem auto;
+  max-width: 90rem;
+  line-height: 1.0;
+  font-style: italic;
 }
