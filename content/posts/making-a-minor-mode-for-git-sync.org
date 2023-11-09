@@ -1,4 +1,4 @@
-#+title: Sharpening Your Tool Shed: git-sync
+#+title: Sharpening Your Tool Shed: git-sync with a little polish
 #+date: <2023-11-08 Wed>
 #+author: Justin Barclay
 #+description: Add a bit of polish to git-sync
@@ -6,6 +6,13 @@
 #+weight: 2001
 #+auto_set_lastmod: t
 #+tags[]: emacs git minor-mode sharpening-your-toolshed
+
+@@html:<div class="banner-image">@@
+#+attr_html: :alt "Two programmers putting a shine their recentlty sharpened toolshed toolshed"
+@@html:<img src="/ox-hugo/sharpening-your-toolshed-part-2.webp">@@
+
+@@html:</div>@@
+
 When last I left off with [[./automating-git-sync.org][git-sync]], I had written a minor mode that runs git-sync every time a file is saved.
 
 #+begin_src elisp
@@ -92,6 +99,9 @@ Now, set =git-sync-global-mode= as follows:
 
 * Shifting from a Command to a Process
 While =async-shell-command= is a good start for executing external programs in Emacs, it has some limitations when used programmatically. It opens up a buffer alongside your workspace, shrinking your workspace in half, and it's not easily closed by switching to the buffer and pressing 'q'. You're left with using something like ~C-x k~ to kill the buffer, like a barbarian.
+
+#+NAME: git-synct running in Emacs
+[[/ox-hugo/git-sync-gif.gif]]
 
 Instead, we're going to use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Asynchronous-Processes.html#index-make_002dprocess][=make-process=]] function to give us more control over the environment in which ~git-sync~ is run. =make-process= takes a lot arguments (=name=, =buffer=, =command=, =coding=, =noquery=, =stop=, =connection-type=, =filter=, =sentinel=, =stderr=, =file-handler=) but we are only concerned about four:
 
