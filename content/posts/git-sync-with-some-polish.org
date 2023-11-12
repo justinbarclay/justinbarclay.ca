@@ -1,5 +1,5 @@
-#+title: Sharpening Your Tool Shed: git-sync with a little polish
-#+date: <2023-11-08 Wed>
+#+title: Sharpening Your Toolshed: git-sync with a little polish
+#+date: <2023-11-12 Sun>
 #+author: Justin Barclay
 #+description: Add a bit of polish to git-sync
 #+section: ./posts
