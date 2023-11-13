@@ -1,6 +1,7 @@
 #+OPTIONS: ^:nil toc:nil
 #+TITLE: Sharpening Your Toolshed: Automating git-sync
 #+date: <2023-10-24 Tue>
+#+lastmod: <2023-11-12 Sun>
 #+author: Justin Barclay
 #+description: How to automate git-sync by creating an Emacs minor mode
 #+section: ./posts
@@ -117,8 +118,8 @@ But for our ~:after-hook~, we simply need to add or remove the ~git-sync-after-s
     "A minor mode to run git-sync on save."
     :lighter " git-sync"
     :after-hook (if git-sync-mode
-                    (setq-local after-save-hook (cons 'git-sync-after-save-hook after-save-hook))
-                  (setq-local after-save-hook (remove 'git-sync-after-save-hook after-save-hook))))
+                    (setq-local after-save-hook (cons 'git-sync-after-save after-save-hook))
+                  (setq-local after-save-hook (remove 'git-sync-after-save after-save-hook))))
 #+end_src
 
 Now that we have defined ~git-sync-mode~, we need to figure out how to turn it on. For that, I am going to keep things simple and use [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Directory-Variables.html][.dir-locals.el]] to turn on ~git-sync-mode~ in the appropriate directories. ~.dir-locals.el~ is Emacs' way of defining directory local variables, kind of like a [[https://www.ibm.com/docs/en/aix/7.2?topic=files-env-file][.env]] file.
@@ -137,3 +138,7 @@ And that is the beauty of minor modes. Users can use little programs to modify t
 
 #+attr_html: :style font-style: italic;
 Build small tools for yourself. After all, our toolsheds aren't going to sharpen themselves.
+
+#+begin_quote
+Check out [[/posts/automating-git-sync-part-2][part 2]] where I add a little bit of polish so it's less annoying to work with.
+#+end_quote

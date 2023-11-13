@@ -1,0 +1,218 @@
+#+title: Sharpening Your Toolshed: git-sync with a little polish
+#+date: <2023-11-12 Sun>
+#+author: Justin Barclay
+#+description: Add a bit of polish to git-sync
+#+section: ./posts
+#+weight: 2001
+#+auto_set_lastmod: t
+#+tags[]: emacs git minor-mode sharpening-your-toolshed
+
+@@html:<div class="banner-image">@@
+#+attr_html: :alt "Two programmers putting a shine on their recently sharpened toolshed toolshed."
+@@html:<img src="/ox-hugo/sharpening-your-toolshed-part-2.webp">@@
+
+@@html:</div>@@
+
+When last I left off with [[/posts/automating-git-sync][git-sync]], I had written a minor mode that runs git-sync every time a file is saved.
+
+#+begin_src elisp
+  (defun git-sync-after-save ()
+   (async-shell-command "git-sync -n -s"))
+   
+  (define-minor-mode git-sync-mode
+    "A minor mode for running git-sync upon saving."
+    :lighter "git-sync"
+    :after-hook (if git-sync-mode
+                    (setq-local after-save-hook (cons 'git-sync-after-save after-save-hook))
+                  (setq-local after-save-hook (remove 'git-sync-after-save after-save-hook))))
+#+end_src
+
+However, this minor mode comes with two inconveniences:
+
+1. It can only be customized using ~.dir-locals~.
+2. An annoying buffer pops up every time a file is saved.
+3. It runs only on *Nix environments
+4. I can't count.
+
+* Creating a Global Minor Mode
+The first issue is relatively simple to address. Instead of relying on a =.dir-locals.el= file to determine when git-sync should run. Instead, I can transform it into a [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Minor-Modes.html#index-define_002dglobalized_002dminor_002dmode][global minor mode]] by employing the =define-global-minor-mode= macro.
+
+#+begin_quote
+[define-global-minor-mode] defines a global toggle named global-mode, whose meaning is to enable or disable the buffer-local minor mode in all ... buffers. It also executes the body forms. To turn on the minor mode in a buffer, it uses the function turn-on; to turn off the minor mode, it calls mode with −1 as an argument.
+- Gnu Emacs
+#+end_quote
+
+#+begin_src elisp
+(define-global-minor-mode global-git-sync-mode
+  git-sync-mode
+  :turn-on (lambda () (git-sync-mode 1))
+#+end_src
+
+I want ~git-sync-mode~ to run in specific files and directories. However, doing this makes git-sync run globally in all files, and I've already decided I don't want this. To run it selectively, I need to create a different minor mode and utilize the =:global= option:
+
+#+begin_src elisp
+(define-minor-mode git-sync-global-mode
+  "A global minor mode for running git-sync."
+  :lighter "git-sync"
+  :global 't
+  :after-hook (if git-sync-mode
+                  (setq-local after-save-hook (cons 'git-sync-after-save-hook after-save-hook))
+                (setq-local after-save-hook (remove 'git-sync-after-save-hook after-save-hook)))
+#+end_src
+
+The final step involves creating a new hook that looks at a user-customized list, [[https://www.gnu.org/software/emacs/manual/html_node/eintr/defcustom.html][~defcustom~]], and only runs git-sync if it's within one of the specified directories.
+
+#+begin_src elisp
+(defcustom git-sync-allow-list nil
+  "List of directories to sync with git-sync."
+  :type '(repeat directory)
+  :group 'git-sync
+  :safe #'listp)
+#+end_src
+
+Then, make a new ~after-save-hook~, ~git-sync-global-after-save~, which checks if the saved file exists in one of the allowed directories or its subdirectory.
+
+#+begin_src elisp
+  (defun git-sync--allowed-directory (current-file allowed-dirs)
+    "Return t if CURRENT-FILE is in one of the ALLOWED-SUBDIRS."
+    (cl-reduce (lambda (any-p allowed-dir)
+                 (or any-p
+                     (string-prefix-p allowed-dir current-file)))
+               allowed-dirs
+               :initial-value nil))
+
+  (defun git-sync-global-after-save ()
+    (when (git-sync--allowed-subdirectory (buffer-file-name))
+      (async-shell-command "git-sync -n -s")))
+#+end_src
+
+Now, set =git-sync-global-mode= as follows
+
+#+begin_src elisp
+(define-minor-mode git-sync-global-mode
+  "A global minor mode for running git-sync."
+  :lighter "git-sync"
+  :global 't
+  :after-hook (if git-sync-global-mode
+                  (setq-local after-save-hook (cons 'git-sync-global-after-save after-save-hook))
+                (setq-local after-save-hook (remove 'git-sync-global-after-save after-save-hook)))
+#+end_src
+
+
+* Shifting from a Command to a Process
+While =async-shell-command= is a good start for executing external programs in Emacs, it has some limitations when used programmatically. It opens up a buffer alongside your workspace, shrinking your workspace in half, and it's not easily closed by switching to the buffer and pressing 'q'. You're left with using something like ~C-x k~ to kill the buffer, like a barbarian.
+
+#+NAME: git-sync running in Emacs
+#+attr_html: :max-width 800px :width 100% :type "video/webm" :controls true
+[[/ox-hugo/git-sync-example.webm]]
+
+Instead, I'm going to use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Asynchronous-Processes.html#index-make_002dprocess][=make-process=]] function to give me more control over the environment in which ~git-sync~ is run. =make-process= takes a lot arguments (=name=, =buffer=, =command=, =coding=, =noquery=, =stop=, =connection-type=, =filter=, =sentinel=, =stderr=, =file-handler=) but I'm only concerned with four:
+
+  - =name=
+    NAME is name for process. It is modified if necessary to make it unique.
+
+  - =sentinel=
+    Install SENTINEL as the process sentinel.
+
+  - =buffer=
+    BUFFER is the buffer (or buffer-name) to associate with the process. Process output goes at end of that buffer, unless you specify a filter function to handle the output. BUFFER may be also nil, meaning that this process is not associated with any buffer.
+
+  - =command=
+     COMMAND is a list starting with the program file name, followed by strings to give to the program as arguments. If the program file name is not an absolute file name, 'make-process' will look for the program file name in 'exec-path' (which is a list of directories).
+
+  The most interesting part is the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Sentinels.html][process sentinel]].
+#+begin_quote
+  A process sentinel is a function that is called whenever the associated process changes status for any reason, including signals (whether sent by Emacs or caused by the process's own actions) that terminate, stop, or continue the process.
+
+  ...
+
+  The sentinel receives two arguments: the process for which the event occurred and a string describing the type of event.
+  - Gnu Emacs
+#+end_quote
+
+So, a process sentinel could look like this
+#+begin_src elisp
+  (defun sentinel-fn (process event)
+    (when (string= event "finished\n")
+      (message "Process finished" process event)))
+#+end_src
+
+The process sentinel is a function that can respond to events in a process buffer. What I want to do with the  sentinel function is to make the process buffer read-only for the user and have the user quit the buffer ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Quitting-Windows.html#index-quit_002drestore_002dwindow][bury it]]) when they press =q=.
+
+Luckily, there is a special [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Major-Modes.html][major-mode]] called [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Basic-Major-Modes.html#index-special_002dmode][special-mode]] that does just that.
+#+begin_src elisp
+  (defun git-sync--sentinel-fn (process event)
+    ;; with-current-buffer remembers the current buffer while
+    ;; executing the body in another buffer
+    (with-current-buffer (process-buffer process)
+      (special-mode)))
+#+end_src
+
+#+begin_quote
+ Emacs can only ever operate in one buffer at a time, so I use [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Current-Buffer.html#index-with_002dcurrent_002dbuffer][~with-current-buffer~]] as means to remember what the current buffer is, switch to a buffer that I want to operate in, and then return control back to the ~current-buffer~ when I'm done my work.
+#+end_quote
+
+Now that I have =git-sync--sentinel-fn=, my next step is to create a buffer for Emacs to run the =git-sync= process in. I can use [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Creating-Buffers.html#index-get_002dbuffer_002dcreate][get-buffer-create]] to find the =*git-sync*= buffer, otherwise create one with that name.
+
+#+begin_src elisp
+(get-buffer-create "*git-sync*")
+#+end_src
+
+#+begin_quote
+By convention, if a buffer's name is surrounded by asterisks (~*~), that buffer is not associated with a file.
+#+end_quote
+
+With that information, I can make a process
+#+begin_src elisp
+  (make-process :name "git-sync"
+                :buffer (get-buffer-create "*git-sync*")
+                :command '("git-sync" "-n" "-s")
+                :sentinel 'git-sync--sentinel-fn)
+#+end_src
+
+Putting it all together, I can get the full minor-mode
+#+begin_src elisp
+  (defcustom git-sync-allow-list nil
+    "List of directories to sync with git-sync."
+    :type '(repeat directory)
+    :group 'git-sync
+    :safe #'listp)
+
+  (defun git-sync--sentinel-fn (process event)
+    (with-current-buffer (process-buffer process)
+      (special-mode))) 
+
+  (defun git-sync--execute ()
+    (make-process :name "git-sync"
+                  :buffer (get-buffer-create "*git-sync*")
+                  :command '("git-sync" "-n" "-s")
+                  :sentinel 'git-sync--sentinel-fn))
+
+  (defun git-sync--allowed-directory (current-file allowed-dirs)
+    "Return t if CURRENT-FILE is in one of the ALLOWED-SUBDIRS."
+    (cl-reduce (lambda (any-p allowed-dir)
+                 (or any-p
+                     (string-prefix-p allowed-dir current-file)))
+               allowed-dirs
+               :initial-value nil))
+
+  (defun git-sync--global-after-save ()
+    (when (git-sync--allowed-subdirectory (buffer-file-name))
+      (git-sync--execute)))
+
+  (define-minor-mode git-sync-global-mode
+    ;; Add minor mode documentation here
+    "A global minor mode to run git-sync."
+    :lighter "git-sync"
+    :global 't
+    :after-hook (if git-sync-mode
+                    (setq-local after-save-hook (cons 'git-sync--global-after-save after-save-hook))
+                  (setq-local after-save-hook (remove 'git-sync--global-after-save after-save-hook))))
+#+end_src
+
+Now, I can admire the fruits of my labour. I can run =git-sync= in my diary after every save, and then I can obsessively open up the =*git-sync*= buffer to ensure it's working.
+#+NAME: git-sync running in Emacs
+#+attr_html: :max-width 800px :width 100% :type "video/webm" :controls true
+[[/ox-hugo/git-sync-example-2.webm]]
+
+Finally, I've got git-sync-mode to a state where using it no longer annoys me.
