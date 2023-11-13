@@ -2,7 +2,6 @@
 #+date: <2023-11-12 Sun>
 #+author: Justin Barclay
 #+description: Add a bit of polish to git-sync
-#+series[]: "Sharpening Your Toolshed"
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
