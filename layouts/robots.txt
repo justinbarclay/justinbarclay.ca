@@ -1,3 +1,8 @@
 User-agent: *
 Disallow: /tags
 Disallow: /categories
+
+User-agent: *
+Allow: /
+
+Sitemap: https://justinbarclay.ca/sitemap.xml
