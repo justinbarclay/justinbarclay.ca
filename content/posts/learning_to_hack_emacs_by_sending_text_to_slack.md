@@ -4,7 +4,6 @@ author = ["Justin Barclay"]
 date = 2018-03-03T00:00:00-07:00
 lastmod = 2019-02-03T15:43:06-07:00
 tags = ["emacs", "slack"]
-categories = ["emacs"]
 draft = false
 weight = 2001
 +++

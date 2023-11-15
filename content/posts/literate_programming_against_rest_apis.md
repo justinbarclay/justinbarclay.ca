@@ -4,7 +4,6 @@ author = ["Justin Barclay"]
 date = 2019-02-02T00:00:00-07:00
 lastmod = 2019-11-08T12:36:03-07:00
 tags = ["emacs", "node", "ruby", "restclient", "twitter", "google"]
-categories = ["emacs"]
 draft = false
 weight = 2001
 +++
