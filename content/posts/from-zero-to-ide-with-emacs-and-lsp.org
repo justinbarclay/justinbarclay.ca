@@ -5,7 +5,7 @@
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
-#+draft: true
+#+draft: false
 #+tags[]: emacs code-completion diagnostics eglot flymake
 
 @@html:<div class="banner-image" height="500px">@@
@@ -144,7 +144,8 @@ Programming fonts are a very personal choice; if you're like me, your personal c
 
 *** Further reading
 - More on [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Displaying-Faces.html][setting]] faces
-** TODO Visual polish
+** TODO Visual polish :noexport:
+
 - [ ] Add colour palettes for each built-in theme
 
 #+begin_src emacs-lisp
@@ -161,18 +162,24 @@ Programming fonts are a very personal choice; if you're like me, your personal c
 ** Other minor UI tweaks
 I run Emacs in GUI mode, and I can't help but feel that the scrollbars are an eyesore. We can check to see that ~scroll-bar-mode~ is enabled and then turn it off.
 #+begin_src elisp
-(when scroll-bar-mode
-  (scroll-bar-mode -1))
+  (when scroll-bar-mode
+    (scroll-bar-mode -1))
 #+end_src
 
 The toolbar takes up a lot of space and doesn't add much to the equation if we keep the menu bar in play, so I also disable that.
 #+begin_src elisp
-(tool-bar-mode -1)
+  (tool-bar-mode -1)
 #+end_src
 
 It's often encouraged to turn off the menu bar as well, but if you ever get lost in Emacs, it's best to have ~menu-bar-mode~ enabled to see what you can do in the current buffer
 #+begin_src elisp
   (menu-bar-mode -1)
+#+end_src
+
+By default, calling ~M-x~ is a bit bare. However, emacs comes with a couple of modes to help with that. There is the ancient [[https://www.gnu.org/software/emacs/manual/html_mono/ido.html][ido-mode]], the more recent [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Icomplete.html][icomplete-mode]], and the slight enhancement to ~icomplete-mode~ called ~fido-mode~. By default, both of these modes expand all the options horizontally in the minibuffer. Still, they have alternatives that I prefer, which expand the options vertically, called ~icomplete-vertical-mode~ and ~fido-vertical-mode~.
+
+#+begin_src elisp
+  (fido-vertical-mode)
 #+end_src
 
 ** End of the beginning
@@ -185,6 +192,7 @@ This still isn't the prettiest-looking editor, but I've improved the situation. 
       (scroll-bar-mode -1))
     (load-theme 'wombat)
     (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height 160)
+    (fido-vertical-mode)
     :custom
     (treesit-language-source-alist
      '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
@@ -596,4 +604,64 @@ Version Control is complicated, and Emacs tries to simplify things or make them 
         ("C-c ! p" . flymake-goto-prev-error)
         ("C-c ! l" . flymake-show-diagnostics-buffer)))
 
+#+end_src
+* Bonus
+** Expanding to support JavaScript
+At the beginning of this post, I mentioned that it would be easy to extend support for other languages, and to prove my point, here is what I would do for JavaScript and TypeScript.
+#+begin_src elisp
+  (use-package js-base-mode
+    :ensure nil
+    :custom
+    (js-indent-level 2)
+    :config
+    (unbind-key "M-." js-base-mode-map))
+
+  (use-package typescript-ts-base-mode
+    :ensure nil
+    :custom
+    (typescript-indent-level 2)
+    :config
+    (unbind-key "M-." typescript-ts-base-mode-map))
+#+end_src
+** External Packages
+I've built a pretty competent IDE now, but it still has a few drawbacks. However, we can alleviate some of my complaints with the packages below.
+
+[[https://github.com/justbur/emacs-which-key][which-key]] helps you remember or discover key bindings by popping up suggestions of what to press next based on the last key chord you pressed.
+#+begin_src elisp :tangle /tmp/emacs/init.el
+  (use-package which-key
+    :hook (after-init . which-key-mode))
+#+end_src
+
+Instead of needing to write our own autocomplete framework, auto-complete-at-point, we can rely on the stalwart [[http://company-mode.github.io/][company-mode]].
+#+begin_src elisp :tangle /tmp/emacs/init.el
+  (use-package company
+    :hook (after-init . global-company-mode)
+    :custom
+    (company-tooltip-align-annotations 't)
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.1))
+#+end_src
+
+And finally, to help with the overall look of Emacs, we can modernize the look with [[https://github.com/rougier/nano-modeline][nano-modeline]].
+#+begin_src elisp :tangle /tmp/emacs/init.el
+  (use-package nano-modeline
+    :ensure nano-modeline
+    :init
+    (nano-modeline-prog-mode t)
+    :custom
+    (nano-modeline-position 'nano-modeline-footer)
+    :hook
+    (prog-mode           . nano-modeline-prog-mode)
+    (text-mode           . nano-modeline-text-mode)
+    (org-mode            . nano-modeline-org-mode)
+    (pdf-view-mode       . nano-modeline-pdf-mode)
+    (mu4e-headers-mode   . nano-modeline-mu4e-headers-mode)
+    (mu4e-view-mode      . nano-modeline-mu4e-message-mode)
+    (elfeed-show-mode    . nano-modeline-elfeed-entry-mode)
+    (elfeed-search-mode  . nano-modeline-elfeed-search-mode)
+    (term-mode           . nano-modeline-term-mode)
+    (xwidget-webkit-mode . nano-modeline-xwidget-mode)
+    (messages-buffer-mode. nano-modeline-message-mode)
+    (org-capture-mode    . nano-modeline-org-capture-mode)
+    (org-agenda-mode     . nano-modeline-org-agenda-mode))
 #+end_src
