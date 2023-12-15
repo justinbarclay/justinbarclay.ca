@@ -1,7 +1,7 @@
-#+TITLE: Turning A Text Editor Into An IDE
+#+TITLE: From Zero To IDE with Emacs and LSP
 #+date: <2023-12-11 Mon>
 #+author: Justin Barclay
-#+description: Using Emacs' built in funcitonality to get code completion and more
+#+description: Using Emacs' built-in functionality to get code completion and more
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
@@ -12,25 +12,25 @@
 @@html:<img style="height:700px" alt="Be the change you want to see." src="/ox-hugo/two-people-configuring-emacs.webp"/>@@
 @@html:</div>@@
 
-Emacs 29 has made great strides toward giving the user the ability to craft their own IDE. using only built-in packages. Of course, this has been a long time coming. Emacs has been an ever growing and changing system but I mark that upgrade to Flymake, which is a framework for displaying diagnostics about code, in Emacs 26 as the beginning of IDE renaissance for Emacs.  Now, 5 years and 3 major versions later I think journey has reached it's zenith with Emacs getting a built-in support for [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] with [[https://github.com/joaotavora/eglot][Eglot]]. I would like to see how close Emacs can get to an IDE like experience.
+Emacs 29 has made great strides toward allowing users to craft their own IDE using only built-in packages. Of course, this has been a long time coming. Emacs is an ever-growing and ever-changing system. However, I mark the refactor of Flymake, a framework for displaying code diagnostics, in Emacs 26 as the beginning of the IDE renaissance for Emacs. Now, five years and three major versions later, I think the journey has reached its zenith with Emacs getting built-in support for [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] with [[https://github.com/joaotavora/eglot][Eglot]]. I want to see how close Emacs can get to an IDE-like experience.
 
-But what does it mean to be IDE like?
+But what does it mean to be IDE-like?
 
-I'll use [[https://code.visualstudio.com/learn][VS Code]] as the gold standard for a programmable IDE. To find out what features make it special, we'll see what Microsoft's calls out as important to it's users as found on its [[https://code.visualstudio.com/learn][learn]] page:
+I'll use [[https://code.visualstudio.com/learn][VS Code]] as the gold standard for a programmable IDE. To find out what features make it special, we'll see what Microsoft calls out as important to its users as found on its [[https://code.visualstudio.com/learn][learn]] page:
 
 #+begin_quote
 Visual Studio Code is a free coding editor that helps you start coding quickly. Use it to code in any programming language, without switching editors. Visual Studio Code has support for many languages, including Python, Java, C++, JavaScript, and more.
 #+end_quote
 
-Ok, so to start with we need built in support for popular programming languages. For my example, I am going to build an IDE for Ruby, but one could imagine it is trivial to expand the functionality to any of the languages mentioned above.
+To start with, we need built-in support for popular programming languages. For my example, I will build an IDE for Ruby, but expanding the functionality to any of the languages mentioned above is trivial.
 
 #+begin_quote
   ### Collaborate and code remotely
 
-  Work together remotely with your teachers or classmates using the free Live Share extension. Edit and debug your code in real-time, and use the chat and call features to ask questions or discuss ideas together.
+  Work together remotely with your teachers or classmates using the free Live Share extension. Edit and debug your code in real time, and use the chat and call features to ask questions or discuss ideas together.
 #+end_quote
 
-This one I'll have to skip. Emacs aims to be a local first code editor with no reliance on external systems or services... and well Live Share requires someone spend lots of money to maintain servers. Well outside of Emacs' wheelhouse, so I'll just take the L here.
+This one I'll have to skip. Emacs aims to be a local first code editor with no reliance on external systems or services... and, well, Live Share requires someone to spend lots of money to maintain servers. This is well outside Emacs' or Emacs users' wheelhouse; I'll take the L here.
 
 #+begin_quote
   ### Code to learn
@@ -38,7 +38,7 @@ This one I'll have to skip. Emacs aims to be a local first code editor with no r
   New to coding? Visual Studio Code highlights keywords in your code in different colors to help you easily identify coding patterns and learn faster. You can also take advantage of features like IntelliSense and Peek Definition
 #+end_quote
 
-So, to clarify our language support should include syntax highlighting and some sort of [[https://en.wikipedia.org/wiki/Intelligent_code_completion][intellisense]] capabilities.
+So, to clarify, our language support should include syntax highlighting and some [[https://en.wikipedia.org/wiki/Intelligent_code_completion][intellisense]] capabilities.
 
 #+begin_quote
   ### Fix errors as you code
@@ -52,7 +52,7 @@ And then we'll need a code-diagnostics, [[https://www.perforce.com/blog/qac/what
   You can also use the debugger in VS Code to step through each line of code and understand what is happening. Check out guides on how to use the debugger if you're coding in Python, Java, and JavaScript/TypeScript/Node.js.
 #+end_quote
 
-While Emacs' does have a built in debugger for a variety of [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Starting-GUD.html][debuggers]], it doesn't natively support Ruby, so that's another L.
+While Emacs' does have a built-in debugger for a variety of [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Starting-GUD.html][debuggers]], it doesn't natively support Ruby, so that's another L.
 
 #+begin_quote
   ### Make it yours with custom themes and colors
@@ -70,17 +70,17 @@ We should be able to make Emacs look pretty.
 
 Finally, we should be able to get diffs of the changes we make and we should also support version control.
 
-So to summarize our IDE should:
+So, to summarize, our IDE should:
 1. Support editing in major languages:
    - Have syntax highlighting
    - Have code diagnostics
-   - Have intellisense
+   - Have IntelliSense
 2. Make Emacs look pretty(ier)
-3. Built in support for version control
-   - including built in support for seeing changes made (diffing)
+3. Built-in support for version control
+   - including built-in support for seeing changes made (diffing)
 
 * In The Beginning...
-...there was [[https://jwiegley.github.io/use-package/][use-package]]. ~use-package~ is a lisp [[https://wiki.c2.com/?LispMacro][macro]] that allows you to declaratively configure Emacs and it's libraries and it's packages. ~use-package~ is a package that has been around for over [[https://github.com/jwiegley/use-package/commit/7ee0fcd0a09c2934e77bf5702e75ba4acba4299c][10 years]]. And it has gain such a foothold into the Emacs community that it landed in Emacs core for the release of [[https://www.gnu.org/software/emacs/manual/html_node/efaq/New-in-Emacs-29.html#:~:text=Emacs%20comes%20with%20the%20popular%20use-package][Emacs 29]].
+...there was [[https://jwiegley.github.io/use-package/][use-package]]. ~use-package~ is a lisp [[https://wiki.c2.com/?LispMacro][macro]] that allows you to declaratively configure Emacs and its libraries and packages. ~use-package~ is a package that has been around for over [[https://github.com/jwiegley/use-package/commit/7ee0fcd0a09c2934e77bf5702e75ba4acba4299c][10 years]]. And it has gained such a foothold into the Emacs community that it landed in Emacs core for the release of [[https://www.gnu.org/software/emacs/manual/html_node/efaq/New-in-Emacs-29.html#:~:text=Emacs%20comes%20with%20the%20popular%20use-package][Emacs 29]].
 
 For example:
 #+begin_src elisp
@@ -90,10 +90,10 @@ For example:
  (load-theme 'some-theme))
 #+end_src
 
-Reading the above snippet of code says that when emacs is initialized, ~:init~, to load the theme ~some-theme~. Setting ~:ensure~ to ~nil~ then tells Emacs' not to download from the package repositories defined in ~package-archives~. ~use-package~ can do a lot more, but you'll have to read elsewhere for that.
+Reading the above snippet of code says that when emacs is initialized, ~:init~, to load the theme ~some-theme~. Setting ~:ensure~ to ~nil~ then tells Emacs' not to download from the package repositories defined in ~package-archives~. ~use-package~ can do much more, but you'll have to read elsewhere for that.
 
 * TODO Lipstick on a Pig 
-I'm a shallow person, and I am sure you are too. I find it hard to use something when it looks ugly. The motivation just isn't there. So let's fix that. Unfortunately, we're a bit limited, Emacs only has a handful of themes and none of them are particularly beautiful.
+I'm a shallow person, and I am sure you are, too. I find it hard to use something when it looks ugly. The motivation just isn't there to use eyesores. So, let's fix that. Unfortunately, we're a bit limited. Emacs has only a handful of themes, and none are particularly charming.
 
 ** Themes
 - adwaita
@@ -120,7 +120,7 @@ I'm a shallow person, and I am sure you are too. I find it hard to use something
 - whiteboard
 - wombat
 
-I like dark themes and ~wombat~ has the least garrish of colours for dark theme, so I guess I'll go with that.
+I like dark themes, and ~wombat~ has the least garish of colours for dark themes, so I'll go with that.
 #+begin_src elisp
 (load-theme 'wombat)
 #+end_src
@@ -131,7 +131,7 @@ If you prefer a light ~theme~, you can't go wrong with dichromacy.
 #+end_src
 
 ** Facing the Music
-Programming fonts are a very personal choice, and if you're like me, your personal choice is very rarely the system default font. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case, that contains information on what font to render and how it should look. This functions takes in a set of arguments, the name of the face, what frame this face should be applied to it, and the list of attributes to apply to the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to further refine the look you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
+Programming fonts are a very personal choice; if you're like me, your personal choice is rarely the system default font. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case that contains information on what font to render and how it should look. This function takes in a set of arguments: the face's name, what frame this face should be applied to, and the list of attributes to apply to the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to further refine the look you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
 
 #+begin_src elisp 
   ;; (set-face-attribute face frame &rest arguments)
@@ -145,7 +145,7 @@ Programming fonts are a very personal choice, and if you're like me, your person
 *** Further reading
 - More on [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Displaying-Faces.html][setting]] faces
 ** TODO Visual polish
-- [ ] Add colour palettes for each built in theme
+- [ ] Add colour palettes for each built-in theme
 
 #+begin_src emacs-lisp
   (require 'svg)
@@ -159,29 +159,29 @@ Programming fonts are a very personal choice, and if you're like me, your person
 #+end_src
 
 ** Other minor UI tweaks
-I run Emacs in GUI mode and I can't help but feel that the scrollbars are an eyesore. So, we can check for when emacs in run in GUI mode, so we can check to see that ~scroll-bar-mode~ is enabled and then turn it off.
+I run Emacs in GUI mode, and I can't help but feel that the scrollbars are an eyesore. We can check to see that ~scroll-bar-mode~ is enabled and then turn it off.
 #+begin_src elisp
 (when scroll-bar-mode
   (scroll-bar-mode -1))
 #+end_src
 
-I find the toolbar takes up a lot of space and doesn't add much to the equation if we keep the menu-bar in play, so I also disable that.
+The toolbar takes up a lot of space and doesn't add much to the equation if we keep the menu bar in play, so I also disable that.
 #+begin_src elisp
 (tool-bar-mode -1)
 #+end_src
 
-It's often encouraged to turn off menu-bar as well, but if you ever get lost in Emacs it's best to have menu-bar-mode to see whats you can do in the current buffer
+It's often encouraged to turn off the menu bar as well, but if you ever get lost in Emacs, it's best to have ~menu-bar-mode~ enabled to see what you can do in the current buffer
 #+begin_src elisp
   (menu-bar-mode -1)
 #+end_src
 
 ** End of the beginning
-I admit, this still isn't the prettiest looking editor, but it is a bit improved. If we put put all of our settings together, we can start our config file at ~$HOME/.emacs.d/init.el~
+This still isn't the prettiest-looking editor, but I've improved the situation. If we combine all of our configurations, we can start our config file at ~$HOME/.emacs.d/init.el~
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package emacs
     :init
     (tool-bar-mode -1)
-    (when (fboundp 'scroll-bar-mode)
+    (when scroll-bar-mode
       (scroll-bar-mode -1))
     (load-theme 'wombat)
     (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height 160)
@@ -191,9 +191,9 @@ I admit, this still isn't the prettiest looking editor, but it is a bit improved
 #+end_src
 
 * Major Modes and Highlighting
-Now that things are looking better, let's learn how to customize [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Major-Modes.html][major modes]]. A major mode describes the behaviour associated with a buffer. For buffers related to source code files this behaviour is generally syntax highlight, cursor movement, and some default keybindings/interaction. ~ruby-ts-mode~ is Emacs' major mode that utilizes [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] for syntax-highlighting.
+Now that things are looking better, let's learn how to customize [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Major-Modes.html][major modes]]. A major mode describes the behaviour associated with a buffer. This behaviour is generally syntax highlighting, cursor movement, and some default keybindings/interactions for buffers related to source files. ~ruby-ts-mode~ is Emacs' major mode that utilizes [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] for syntax-highlighting.
 
-Most major-modes in Emacs that are tree-sitter based have ~-ts-~ within the name. So theoretically you could call ~ruby-ts-mode~ and have tree-sitter based ruby syntax highlighting for your files. 
+Most major modes in Emacs that are ~tree-sitter~ based have ~-ts-~ within the name. So theoretically, you could call ~ruby-ts-mode~ and have ~tree-sitter~ based ruby syntax highlighting for your files. 
 #+begin_src elisp
   (use-package ruby-ts-mode
     :mode "\\.rb\\'"
@@ -205,11 +205,11 @@ Most major-modes in Emacs that are tree-sitter based have ~-ts-~ within the name
 I use mode here to specify which file types should be controlled by the ~ruby-ts-mode~. In this example, any file ending in ".rb" and any file called "Rakefile" or "Gemfile" should activate the ruby-ts major mode.
 #+end_quote
 
-** Installing a treesitter grammer
-Unfortunately, using a tree-sitter major-mode is not quite that simple. Although, Emacs can utilize tree sitter grammar and parsers, it does not install them for you. Instead, you need to create an assign [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Association-Lists.html][alist]] to treesit-language-source-alist. This alist should be language and git repo of the tree-sitter parsers.
+** Installing a tree-sitter grammar
+Unfortunately, using a tree-sitter major mode is not quite that simple. First, ensure that Emacs was compiled with ~tree-sitter~ support using the ~--with-tree-sitter~ flag. Second, although Emacs can utilize tree-sitter grammar and parsers, it does not install them for you. Instead, you need to create an assign [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Association-Lists.html][alist]] to treesit-language-source-alist. This alist should be a cons cell of language and git repo for the tree-sitter parser.
 
-So, for just ruby that would look like
-#+begin_src elisp :tangle /tmp/emacs/init.el
+So, for Ruby, that would look like
+#+begin_src elisp
   (use-package emacs
     ;;...
     :custom
@@ -217,12 +217,12 @@ So, for just ruby that would look like
      '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
 #+end_src
 
-And then you need to run the command ~treesit-install-language-grammar~ and select the language you want to install.
+Then, you must run the command ~treesit-install-language-grammar~ and select the language you want to install.
 
-For a more in depth look into how to setup tree-sitter for Emacs 29, see [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey Peterson's article]].
+For a more in-depth look into how to set up ~tree-sitter~ for Emacs 29, see Mickey Peterson's [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][article]].
 
 ** Bindings
-Now that we have a working ts-mode, what else does Emacs do for us? Well for ruby, and many other languages, it will also add keybindings to simplify common operations.
+Now that we have a working ts-mode, what else can Emacs do for us? Well, for Ruby and many other languages, it will also add keybindings to simplify common operations.
 
 Alongside Emacs' regular keybindings, see the [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][cheatsheet]], ~ruby-ts-mode~ adds the following keybindings
 
@@ -232,11 +232,11 @@ Alongside Emacs' regular keybindings, see the [[https://www.gnu.org/software/ema
 | C-c '        | ruby-toggle-string-quotes | Toggle string literal quoting between single and double.       |
 | C-c C-f      | ruby-find-library-file    | Visit a library file denoted by FEATURE-NAME.                  |
 | C-c {        | ruby-toggle-block         | Toggle block type from do-end to braces or back.               |
-| M-q          | prog-fill-reindent-defun  | Refill or reindent the paragraph or defun that contains point. |
+| M-q          | prog-fill-reindent-defun  | Refill or reindent the paragraph or defun that contains the point. |
 
-You can see this for yourself by pressing ~C-h m~ or ~M-x describe-mode~.
+You can explore what keybindings are available for a buffer by typing ~M-x describe-mode~ or pressing ~C-h m~.
 
-You can also set some key bindings yourself. For instance what about jumping to the beginning and end of functions? Here, I use ~C-c~ because that is the common prefix for user key bindings, then I use ~r~ for ruby, and then finally ~b~ for beginning and ~e~ for end of defun.
+You can also set some key bindings yourself. For instance, what about jumping to the beginning and end of functions? Here, I use ~C-c~ because that is the common prefix for user key bindings, then I use ~r~ for ruby, and then ~b~ for beginning or ~e~ for end of defun.
 #+begin_src elisp
   (define-key ruby-ts-mode-map (kbd "C-c r b") 'treesit-beginning-of-defun)
   (define-key ruby-ts-mode-map (kbd "C-c r e") 'treesit-end-of-defun)
@@ -254,14 +254,14 @@ Or you can use bind-key to simplify this.
     )
 #+end_src
 
-And if you forget what these key chords, or any key chords, do you can use ~C-h k~ to describe a key chord. For example, pressing ~C-h k~ + ~C-c r b~ in ~ruby-ts-mode~ opens up a buffer saying
+And if you forget what these key chords, or any key chords, you can use ~C-h k~ to describe a key chord. For example, pressing ~C-h k~ + ~C-c r b~ in ~ruby-ts-mode~ opens up a buffer saying
 
 #+begin_quote
 ruby-beginning-of-defun is an interactive and natively compiled function defined in ruby-mode.el.gz
 #+end_quote
 ** Customizing Ruby Mode
-To find a complete list of customizable attributes for ~ruby-ts-mode~ you can search by customize-group using ~M-x customize-group RET ruby RET~.
-But for now we'll just focus on white-space:
+To find a complete list of customizable attributes for ~ruby-ts-mode~, you can search by calling ~customize-group~, for example, ~M-x customize-group RET ruby RET~.
+But for now, we'll focus on whitespace:
 
 #+begin_src elisp
   (use-package ruby-ts-mode
@@ -278,10 +278,10 @@ You can also tell Emacs to enable minor modes like [[https://www.gnu.org/softwar
 #+end_src
 
 #+begin_quote
-The subword minor mode replaces the basic word oriented movement and editing commands with variants that recognize subwords in [words with mixed upper and lowercase characters] and treat them as separate words
+The subword minor mode replaces the basic word-oriented movement and editing commands with variants that recognize subwords in [words with mixed upper and lowercase characters] and treat them as separate words
 #+end_quote
 ** Putting it all together
-With those tweaks and adjustments we can define our ruby config like so:
+With those tweaks and adjustments, we can define our ruby config like so:
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package ruby-ts-mode
     :mode "\\.rb\\'"
@@ -296,7 +296,7 @@ With those tweaks and adjustments we can define our ruby config like so:
     (ruby-indent-tabs-mode nil))
 #+end_src
 * Codes sense and completion
-[[https://microsoft.github.io/language-server-protocol/][Language Servers]] have becomes the industry standard for getting [[https://en.wikipedia.org/wiki/Intelligent_code_completion][intellisense]] like behaviour from your editor. And, with the release of version 29, Emacs has built-in support for LSP with [[https://www.gnu.org/software/emacs/manual/html_node/eglot/index.html][Eglot]], which stands Emacs Polyglot.
+[[https://microsoft.github.io/language-server-protocol/][Language Servers]] have becomes the industry standard for getting [[https://en.wikipedia.org/wiki/Intelligent_code_completion][intellisense]] like behaviour from your editor. And, with the release of version 29, Emacs has built-in support for LSP with [[https://www.gnu.org/software/emacs/manual/html_node/eglot/index.html][Eglot]], which stands for Emacs Polyglot.
 
 Some of the features Eglot [[https://www.gnu.org/software/emacs/manual/html_node/eglot/Eglot-Features.html][provides]]:
 - At-point documentation
@@ -307,10 +307,10 @@ Some of the features Eglot [[https://www.gnu.org/software/emacs/manual/html_node
 - automatic code formatting
 - integration with popular third-party packages including [[https://github.com/joaotavora/yasnippet][yasnippet]], [[https://github.com/jrblevin/markdown-mode][markdown-mode]], [[https://github.com/company-mode/company-mode][company-mode]] or [[https://github.com/minad/corfu][corfu]].
 
-Luckily Eglot is easy to set-up. We can use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Basic-Major-Modes.html][prog-mode-hook]] and Eglot's ~eglot-ensure~ function to attempt to start a language server for all programming related buffers.
+Luckily, Eglot is easy to set up. We can use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Basic-Major-Modes.html][prog-mode-hook]] and Eglot's ~eglot-ensure~ function to attempt to start a language server for all programming related buffers.
 
 #+begin_quote
-Prog mode is a basic major mode for buffers containing programming language source code. Most of the programming language major modes built into Emacs are derived from it.
+Prog mode is a basic major mode for buffers containing programming language source code. All of the major modes for programming languages that are built into Emacs are derived from it.
 #+end_quote
 
 #+begin_src elisp
@@ -318,7 +318,7 @@ Prog mode is a basic major mode for buffers containing programming language sour
     :hook (prog-mode . eglot-ensure))
 #+end_src
 
-Eglot comes with several of [[https://www.gnu.org/software/emacs/manual/html_node/eglot/Eglot-Features.html][features]] and some of these features integrate with other libraries/packages of Emacs. Below, I've outlined the features of Eglot that I'm going to use and the library dependency, if any, it relies on.
+Eglot comes with several of [[https://www.gnu.org/software/emacs/manual/html_node/eglot/Eglot-Features.html][features]], and some of these features integrate with other libraries/packages of Emacs. I've outlined the features of Eglot that I'm going to use and the library dependency, if any, it relies on.
 
 | Feature                        | Dependency          |
 |--------------------------------+---------------------|
@@ -330,28 +330,29 @@ Eglot comes with several of [[https://www.gnu.org/software/emacs/manual/html_nod
 | jump to definition/find useage | [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Xref.html][xref]]                |
 
 ** Adding Documentation
-[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Programming-Language-Doc.html][Eldoc]], which started out as ~emacs-lips documentation~, is Emacs' documentation library. When it's enabled it shows either the function's documentation, or barring that, the argument list for the function in the echo area. However, this documentation is only limited to a line or two of information. If you want the full document that Emacs' has for that function, class, or method then Emacs give you ~display-local-help~, which is bound to ~C-h .~.
-
 In general, I think it's best to enable ~eldoc~ everywhere
+
+[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Programming-Language-Doc.html][Eldoc]], which started out as ~emacs-lips documentation~, is Emacs' documentation library. When enabled, it shows either the function's documentation or, barring that, the argument list for the function in the echo area. However, this documentation is only limited to a line or two of information. If you want the full document that Emacs' has for that function, class, or method, then Emacs gives you ~display-local-help~, which is bound to ~C-h .~.
+
 #+begin_src elisp :tangle /tmp/emacs/init.el
 (use-package eldoc
   :init
   (global-eldoc-mode))
 #+end_src
 ** Other riffraff
-Eldoc requires _some_ configuration to work these other ones don't - they just have keybindings that aren't explained to you.
+Eldoc requires _some_ configuration to work. However, ~imenu~, ~xref~, and ~completion-at-point~ don't require any configuration; they just have keybindings you need to learn.
 
 | Systems             | Keybindings | Description                                                                                     |
 |---------------------+-------------+-------------------------------------------------------------------------------------------------|
 | [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Imenu.html][iMenu]]               | ~M-g i~     | a system that uses [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Minibuffer-Completion.html][completing-read]] used for jumping to major definitions or sections of a file. |
-| [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Xref.html][xref]]                |             | Is an ancient system that finds references and definitions for a major mode's indentifiers.     |
+| [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Xref.html][xref]]                |             | Is an ancient system that finds references and definitions for a major mode's identifiers.     |
 |                     | ~M-.~       | Jump to the definition of the symbol at point                                                   |
 |                     | ~M-,~       | Jump back to the last location that invoke ~M-.~                                                |
 | [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][completion-at-point]] | ~M-<TAB>~   | Pops up possible completions for the symbol at point                                            |
 
 
 ** Bindings
-Eglot comes with a lot of built-in functions and I think some of them should be elevated to the status of keybinding.
+Eglot has many built-in functions, and I think some should be elevated to keybindings.
 #+begin_src elisp
 (use-package eglot
     ;;.
@@ -364,7 +365,7 @@ Eglot comes with a lot of built-in functions and I think some of them should be 
 #+end_src
 
 ** Criticisms
-I think Emacs' built-in in-buffer completion system is still it's weakest point. It lags behind all other major text editos which provide completions as you type and it provides those completions in a pop-up beside your cursor. Meanwhile Emacs' will only show you potential completions when you hit ~M-<TAB>~ and it shows completions outside of your current one. This feels non-ergonomic, and the community agrees with me. They're have been at least [[https://github.com/auto-complete/auto-complete][3]] [[https://github.com/company-mode/company-mode][pop-up]] [[https://github.com/minad/corfu][completion]] frameworks for Emacs and I hope that one day soon Emacs settles on one.
+I think Emacs' built-in in-buffer completion system is still its weakest point. It lags behind all other major text editors, which provide completions as you type, and it provides those completions in a pop-up beside your cursor. Meanwhile, Emacs will only show you potential completions when you hit ~M-<TAB>~, and it shows completions outside of your current one. This feels non-ergonomic, and the community agrees with me. There have been at least [[https://github.com/auto-complete/auto-complete][3]] [[https://github.com/company-mode/company-mode][pop-up]] [[https://github.com/minad/corfu][completion]] frameworks for Emacs and I hope that one day soon Emacs core will on one.
 
 *** A minor fix
 Emacs doesn't come with a pop-up library. But we can use the magic of [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Timers.html][timers]] and [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Advising-Functions.html][advice]] to fix the autocomplete problem.
@@ -387,8 +388,12 @@ Emacs doesn't come with a pop-up library. But we can use the magic of [[https://
   (advice-add 'self-insert-command :after #'auto-complete-at-point)
 #+end_src
 
-Now of course, if you are one that only wants to completions to pop-up at your behest you can ignore the above code block and use ~M-<TAB>~ to your hearts content.
+Of course, if you only want completions to pop up at your behest, you can ignore the above code block and use ~M-<TAB>~ to your heart's content.
 ** Completing our completing read
+:PROPERTIES:
+:alt-title: Sensing the end of our completions
+:END:
+
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package eglot
     :hook (prog-mode . eglot-ensure)
@@ -432,17 +437,17 @@ Now of course, if you are one that only wants to completions to pop-up at your b
                                              (add-hook 'post-self-insert-hook #'auto-complete-at-point nil t)
                                            (remove-hook 'post-self-insert-hook #'auto-complete-at-point t)))))
 #+end_src
-* Linting and Error checking
+* Linting and Error-checking
 Emacs has a built-in on-the-fly syntax checker called [[https://www.gnu.org/software/emacs/manual/html_node/flymake/index.html#Top][Flymake]].
 
-By default, Flymake supports 10 languages including Ruby. Specifically, it's supports using either [[https://rubocop.org/][Rubocop]] or the ruby CLI itself, through ~ruby -w -c~. Like with ~ruby-ts-mode~ we will use ~use-package~ to load and configure the package. Now, we could tell Flymake only start up when ~ruby-ts-mode~ starts up with ~:hook (ruby-ts-mode . flymake-mode)~. However, that means we'll have to add to this list each time we want to add Flymake to a new language. Instead, we could tell Flymake to add itself to the prog-mode-hook ~:hook (prog-mode . flymake-mode)~, thus ensuring that Flymake tries to start-up for every programming related buffer.
+By default, Flymake supports ten languages, including Ruby. To get linting in Ruby, you will need to have [[https://rubocop.org/][Rubocop]] installed. Failing that, Flymake will use ~ruby -w -c~. Like with ~ruby-ts-mode~, we will use ~use-package~ to load and configure the package. Now, we can tell Flymake only starts when ~ruby-ts-mode~ starts up with ~:hook (ruby-ts-mode . flymake-mode)~. However, that means we'll have to add to this list each time we want to add Flymake to a new language. Instead, we could tell Flymake to add itself to the prog-mode-hook ~:hook (prog-mode . flymake-mode)~, thus ensuring that Flymake tries initializing itself in every programming-related buffer.
 
 #+begin_src elisp
 (use-package flymake
   :hook (prog-mode . flymake-mode))
 #+end_src
 
-Now, you're buffers will light up a Christmas tree and yell at your for all of the mistakes you're making. Flymake, comes with a couple functions for understanding your errors and for navigating your mistakes.
+Now, your buffers will light up a Christmas tree and yell at you for all of your mistakes. Flymake comes with a couple of functions for understanding your errors and for navigating your mistakes.
   - flymake-goto-next-error
   - flymake-goto-prev-error
   - flymake-show-buffer-diagnostics
@@ -451,7 +456,7 @@ Unfortunately, none of these are bound to key chords. But we can fix that!
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package flymake
     :hook (prog-mode . flymake-mode)
-    ;; This first bind conflicts with eglot, but is left here for
+    ;; This first bind conflicts with eglot but is left here for
     ;; demonstrative purposes
     :bind (("C-h ." . display-local-help)
           :map flymake-mode-map
@@ -461,7 +466,7 @@ Unfortunately, none of these are bound to key chords. But we can fix that!
 #+end_src
 
 * Version Control
-Like imenu and xref, Emacs' Version Control system, [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Version-Control.html][~vc.el~]], is built-in and enabled by default. ~vc.el~ has been around for many years and as such has accumulated support for _bunch_ of version control systems.
+Like ~imenu~ and ~xref~, Emacs' Version Control system, [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Version-Control.html][~vc.el~]], is built-in and enabled by default. ~vc.el~ has been around for many years and has accumulated support for a _bunch_ of version control systems.
 - [[https://en.wikipedia.org/wiki/Git][Git]]
 - [[https://en.wikipedia.org/wiki/Concurrent_Versions_System][CVS]]
 - [[https://en.wikipedia.org/wiki/Apache_Subversion][Subversion]]
@@ -472,24 +477,24 @@ Like imenu and xref, Emacs' Version Control system, [[https://www.gnu.org/softwa
 - [[https://en.wikipedia.org/wiki/GNU_Bazaar][Bazaar]]
 - [[http://www.catb.org/~esr/src/][SRC]]
 
-For a system like git you can use ~M-x vc-dir~ (~C-x v d RET~) to view the status of the current directory. If you're looking to diff things Emacs gives you ~M-x vc-root-diff~ (~C-x v D~) to diff the entire repository or ~M-x vc-diff~ (~C-x v =~) to diff the current file.
+For a system like git, you can use ~M-x vc-dir~ (~C-x v d RET~) to view the status of the current directory. If you're looking to diff things, Emacs gives you ~M-x vc-root-diff~ (~C-x v D~) to diff the entire repository or ~M-x vc-diff~ (~C-x v =~) to diff the current file.
 
-If you're looking to commit the changes for a file you can use ~M-x vc-next-action~ (~C-x v v~), which will stage your current changes and prompt you to enter your commit message. Then, when you're done you hit ~C-c C-c~.
+To commit the changes for a file, you can use ~M-x vc-next-action~ (~C-x v v~), which will stage your current changes and prompt you to enter your commit message. Then, when you're done, you hit ~C-c C-c~.
 
-You don't need to add ~vc~ your config file, but it may help to have some reminders for the keybindings
+You don't need to add ~vc~ to your config file, but it may help to have some reminders for the keybindings
 #+begin_src emacs-lisp
   (use-package vc
-    ;; This is not needed but it is left here as a reminder of some of the keybindings
+    ;; This is not needed, but it is left here as a reminder of some of the keybindings
     :bind (("C-x v d" vc-dir)
            ("C-x v =" vc-diff)
            ("C-x v D" vc-root-diff)
            ("C-x v v" vc-next-action))
 #+end_src
 
-I'm not here to walk you through how to use ~vc~, my intent was to show you that it existed and what, if any, config is needed.
+This is only a tiny sampling of what ~vc.el~ can do, so I encourage you to read the docs and explore more.
 
-** Conflicts
-I'd be remiss if I did not point out Emacs' two systems for dealing with merge conflict. You have access to ~smerge~, which stands for simple merge, that lets you put your cursor within the conflict and choose to keep the top, bottom or both.
+** Conflicting advice
+I'd be remiss not to mention Emacs' two systems for dealing with merge conflict. You have access to ~smerge~, which stands for simple merge, that lets you put your cursor within the conflict and choose to keep the top, bottom, or both.
 
 #+begin_src elisp
   (use-package smerge-mode
@@ -502,9 +507,10 @@ I'd be remiss if I did not point out Emacs' two systems for dealing with merge c
 
 Or there is [[https://www.gnu.org/software/emacs/manual/html_mono/ediff.html][ediff]], which is outside of the scope of this article to explain how to use.
 ** More Info
-Version Control is complicated and Emacs tries to make things simpler, or, well at least more idiomatic.
+Version Control is complicated, and Emacs tries to simplify things or make them more idiomatic.
 
 *** Videos
 - https://protesilaos.com/codelog/2020-04-10-emacs-smerge-ediff/
 - https://protesilaos.com/codelog/2020-03-30-emacs-intro-vc/
 - https://www.youtube.com/watch?v=UiO7xJb5Gdw
+
