@@ -12,12 +12,12 @@
 @@html:<img style="height:700px" alt="Be the change you want to see." src="/ox-hugo/two-people-configuring-emacs.webp"/>@@
 @@html:</div>@@
 
-
-With version 29, [[id:c384a986-2a40-44fa-86b3-4143385b0a58][Emacs]] completed made great strides to giving the user the ability to craft their own IDE, using only built-in packages. Of course, this has been a long time coming. It started off with the update of Flymake in Emacs 26, Flymake is a built in linting and diagnostic framework. The journey has reached it's zenith with Emacs' getting a built in support for [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] with [[https://github.com/joaotavora/eglot][Eglot]]. So now, I would like to see how close Emacs can get to an IDE like experience.
+Emacs 29 has made great strides toward giving the user the ability to craft their own IDE. using only built-in packages. Of course, this has been a long time coming. Emacs has been an ever growing and changing system but I mark that upgrade to Flymake, which is a framework for displaying diagnostics about code, in Emacs 26 as the beginning of IDE renaissance for Emacs.  Now, 5 years and 3 major versions later I think journey has reached it's zenith with Emacs getting a built-in support for [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] with [[https://github.com/joaotavora/eglot][Eglot]]. I would like to see how close Emacs can get to an IDE like experience.
 
 But what does it mean to be IDE like?
 
-We'll use [[https://code.visualstudio.com/learn][Vs Code]] as our gold standard. To find out what features make it special, we'll see what Microsoft's calls out as important to it's users as found on its [[https://code.visualstudio.com/learn][learn]] page:
+I'll use [[https://code.visualstudio.com/learn][VS Code]] as the gold standard for a programmable IDE. To find out what features make it special, we'll see what Microsoft's calls out as important to it's users as found on its [[https://code.visualstudio.com/learn][learn]] page:
+
 #+begin_quote
 Visual Studio Code is a free coding editor that helps you start coding quickly. Use it to code in any programming language, without switching editors. Visual Studio Code has support for many languages, including Python, Java, C++, JavaScript, and more.
 #+end_quote
@@ -33,19 +33,20 @@ Ok, so to start with we need built in support for popular programming languages.
 This one I'll have to skip. Emacs aims to be a local first code editor with no reliance on external systems or services... and well Live Share requires someone spend lots of money to maintain servers. Well outside of Emacs' wheelhouse, so I'll just take the L here.
 
 #+begin_quote
-
   ### Code to learn
 
   New to coding? Visual Studio Code highlights keywords in your code in different colors to help you easily identify coding patterns and learn faster. You can also take advantage of features like IntelliSense and Peek Definition
 #+end_quote
+
 So, to clarify our language support should include syntax highlighting and some sort of [[https://en.wikipedia.org/wiki/Intelligent_code_completion][intellisense]] capabilities.
+
 #+begin_quote
   ### Fix errors as you code
 
   As you code, Visual Studio Code gives you suggestions to complete lines of code and quick fixes for common mistakes.
 #+end_quote
 
-And then we'll need a [[https://www.perforce.com/blog/qac/what-lint-code-and-what-linting-and-why-linting-important][linter]].
+And then we'll need a code-diagnostics, [[https://www.perforce.com/blog/qac/what-lint-code-and-what-linting-and-why-linting-important][linter]].
 
 #+begin_quote
   You can also use the debugger in VS Code to step through each line of code and understand what is happening. Check out guides on how to use the debugger if you're coding in Python, Java, and JavaScript/TypeScript/Node.js.
@@ -74,7 +75,7 @@ So to summarize our IDE should:
    - Have syntax highlighting
    - Have code diagnostics
    - Have intellisense
-2. Make Emacs look pretty
+2. Make Emacs look pretty(ier)
 3. Built in support for version control
    - including built in support for seeing changes made (diffing)
 
@@ -89,7 +90,7 @@ For example:
  (load-theme 'some-theme))
 #+end_src
 
-Reading the above snippet of code says that when emacs is initialized, ~:init~, to load the theme ~some-theme~. The ~:ensure~ keyword then tells Emacs' not to download from the package repositories defined in ~package-archives~. ~use-package~ can do a lot more, but you'll have to read elsewhere for that.
+Reading the above snippet of code says that when emacs is initialized, ~:init~, to load the theme ~some-theme~. Setting ~:ensure~ to ~nil~ then tells Emacs' not to download from the package repositories defined in ~package-archives~. ~use-package~ can do a lot more, but you'll have to read elsewhere for that.
 
 * TODO Lipstick on a Pig 
 I'm a shallow person, and I am sure you are too. I find it hard to use something when it looks ugly. The motivation just isn't there. So let's fix that. Unfortunately, we're a bit limited, Emacs only has a handful of themes and none of them are particularly beautiful.
@@ -118,8 +119,19 @@ I'm a shallow person, and I am sure you are too. I find it hard to use something
 - wheatgrass 	
 - whiteboard
 - wombat
+
+I like dark themes and ~wombat~ has the least garrish of colours for dark theme, so I guess I'll go with that.
+#+begin_src elisp
+(load-theme 'wombat)
+#+end_src
+
+If you prefer a light ~theme~, you can't go wrong with dichromacy.
+#+begin_src elisp
+(load-theme 'dichromacy)
+#+end_src
+
 ** Facing the Music
-Programming fonts are a very personal choice, and if you're like me, your personal choice is very rarely the system default font. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case, that contains information on what font to render and how it should look. This functions takes in a set of arguments, the name of the face, what frame this face should be applied to it, and the list of attributes to apply the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to further refine the look you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
+Programming fonts are a very personal choice, and if you're like me, your personal choice is very rarely the system default font. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case, that contains information on what font to render and how it should look. This functions takes in a set of arguments, the name of the face, what frame this face should be applied to it, and the list of attributes to apply to the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to further refine the look you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
 
 #+begin_src elisp 
   ;; (set-face-attribute face frame &rest arguments)
@@ -131,26 +143,25 @@ Programming fonts are a very personal choice, and if you're like me, your person
 #+end_src
 
 *** Further reading
-- How attributes are [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Displaying-Faces.html][set]]
-** TODO-List
+- More on [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Displaying-Faces.html][setting]] faces
+** TODO Visual polish
 - [ ] Add colour palettes for each built in theme
-  
+
 #+begin_src emacs-lisp
   (require 'svg)
-  (setq svg (svg-create 800 800 :stroke "black" :stroke-width 5))
-  (svg-gradient svg "gradient" 'linear '((0 . "red") (100 . "red")))
+  (setq svg nil)
   (save-excursion (goto-char (point-max)) (svg-insert-image svg))
-  (svg-rectangle svg 100 100 500 500 :gradient "gradient" :id "rec1")
   (defun svg-square (color)
     (svg-rectangle svg
-                   0 0 100 100
+                   0 0 50 50
                     :fill color))
-  (svg-square "red")
+  (svg-square "purple")
 #+end_src
+
 ** Other minor UI tweaks
-I find the scrollbars in Emacs to look Garish, so I would much rather hide them. But, we also have to ensure that Emacs' is loaded with scrollbars or we could error out when running on the command line, so we check with ~fboundp~.
+I run Emacs in GUI mode and I can't help but feel that the scrollbars are an eyesore. So, we can check for when emacs in run in GUI mode, so we can check to see that ~scroll-bar-mode~ is enabled and then turn it off.
 #+begin_src elisp
-(when (fboundp 'scroll-bar-mode)
+(when scroll-bar-mode
   (scroll-bar-mode -1))
 #+end_src
 
@@ -159,20 +170,26 @@ I find the toolbar takes up a lot of space and doesn't add much to the equation 
 (tool-bar-mode -1)
 #+end_src
 
+It's often encouraged to turn off menu-bar as well, but if you ever get lost in Emacs it's best to have menu-bar-mode to see whats you can do in the current buffer
+#+begin_src elisp
+  (menu-bar-mode -1)
+#+end_src
 
-** Putting it all together
+** End of the beginning
+I admit, this still isn't the prettiest looking editor, but it is a bit improved. If we put put all of our settings together, we can start our config file at ~$HOME/.emacs.d/init.el~
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package emacs
     :init
     (tool-bar-mode -1)
     (when (fboundp 'scroll-bar-mode)
-  (scroll-bar-mode -1))
+      (scroll-bar-mode -1))
     (load-theme 'wombat)
     (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height 160)
     :custom
     (treesit-language-source-alist
      '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
 #+end_src
+
 * Major Modes and Highlighting
 Now that things are looking better, let's learn how to customize [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Major-Modes.html][major modes]]. A major mode describes the behaviour associated with a buffer. For buffers related to source code files this behaviour is generally syntax highlight, cursor movement, and some default keybindings/interaction. ~ruby-ts-mode~ is Emacs' major mode that utilizes [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] for syntax-highlighting.
 
@@ -484,3 +501,10 @@ I'd be remiss if I did not point out Emacs' two systems for dealing with merge c
 #+end_src
 
 Or there is [[https://www.gnu.org/software/emacs/manual/html_mono/ediff.html][ediff]], which is outside of the scope of this article to explain how to use.
+** More Info
+Version Control is complicated and Emacs tries to make things simpler, or, well at least more idiomatic.
+
+*** Videos
+- https://protesilaos.com/codelog/2020-04-10-emacs-smerge-ediff/
+- https://protesilaos.com/codelog/2020-03-30-emacs-intro-vc/
+- https://www.youtube.com/watch?v=UiO7xJb5Gdw
