@@ -5,7 +5,7 @@
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
-#+draft: false
+#+draft: true
 #+tags[]: emacs code-completion diagnostics eglot flymake
 
 @@html:<div class="banner-image" height="500px">@@
@@ -482,7 +482,7 @@ For a system like git, you can use ~M-x vc-dir~ (~C-x v d RET~) to view the stat
 To commit the changes for a file, you can use ~M-x vc-next-action~ (~C-x v v~), which will stage your current changes and prompt you to enter your commit message. Then, when you're done, you hit ~C-c C-c~.
 
 You don't need to add ~vc~ to your config file, but it may help to have some reminders for the keybindings
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tanlge /tmp/emacs/init.el
   (use-package vc
     ;; This is not needed, but it is left here as a reminder of some of the keybindings
     :bind (("C-x v d" vc-dir)
@@ -496,7 +496,7 @@ This is only a tiny sampling of what ~vc.el~ can do, so I encourage you to read 
 ** Conflicting advice
 I'd be remiss not to mention Emacs' two systems for dealing with merge conflict. You have access to ~smerge~, which stands for simple merge, that lets you put your cursor within the conflict and choose to keep the top, bottom, or both.
 
-#+begin_src elisp
+#+begin_src elisp :tangle /tmp/init.el
   (use-package smerge-mode
     :bind (:map smerge-mode-map
                 ("C-c ^ u" . smerge-keep-upper)
@@ -514,3 +514,86 @@ Version Control is complicated, and Emacs tries to simplify things or make them 
 - https://protesilaos.com/codelog/2020-03-30-emacs-intro-vc/
 - https://www.youtube.com/watch?v=UiO7xJb5Gdw
 
+* TODO Write Conclusion
+
+#+begin_src elisp
+(use-package emacs
+  :init
+  (tool-bar-mode -1)
+  (when scroll-bar-mode
+    (scroll-bar-mode -1))
+  (load-theme 'wombat)
+  (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height 160)
+  :custom
+  (treesit-language-source-alist
+   '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
+
+(use-package ruby-ts-mode
+  :mode "\\.rb\\'"
+  :mode "Rakefile\\'"
+  :mode "Gemfile\\'"
+  :hook (ruby-ts-mode . subword-mode)
+  :bind (:map ruby-ts-mode-map
+              ("C-c r b" . 'treesit-beginning-of-defun)
+              ("C-c r e" . 'treesit-end-of-defun))
+  :custom
+  (ruby-indent-level 2)
+  (ruby-indent-tabs-mode nil))
+
+(use-package eldoc
+  :init
+  (global-eldoc-mode))
+
+(use-package eglot
+  :hook (prog-mode . eglot-ensure)
+  ;; The first 5 bindings aren't needed here, but are a good
+  ;; reminder of what they are bound too
+  :bind (("M-TAB" . completion-at-point)
+         ("M-g i" . imenu)
+         ("C-h ." . display-local-help)
+         ("M-." . xref-find-definitions)
+         ("M-," . xref-go-back)
+         :map
+         eglot-mode-map
+         ("C-c c a" . 'eglot-code-actions)
+         ("C-c c o" . 'eglot-code-actions-organize-imports)
+         ("C-c c r" . 'eglot-rename)
+         ("C-c c f" . 'eglot-format))
+  :config
+  (defvar complete-at-point--timer nil "Timer for triggering complete-at-point.")
+
+  (defun auto-complete-at-point (&rest _)
+    "Set a time to complete the current symbol at point in 0.1 seconds"
+    (when (and (not (minibufferp)))
+      ;; If a user inserts a character while a timer is active, reset
+      ;; the current timer
+      (when (timerp complete-at-point--timer)
+        (cancel-timer complete-at-point--timer))
+      (setq complete-at-point--timer
+            (run-at-time 0.2 nil
+                         (lambda ()
+                           ;; Clear out the timer and run
+                           ;; completion-at-point
+                           (when (timerp complete-at-point--timer)
+                             (cancel-timer complete-at-point--timer))
+                           (setq complete-at-point--timer nil)
+                           (completion-at-point))))))
+  ;; Add a hook to enable auto-complete-at-point when eglot is enabled
+  ;; this allows use to remove the hook on 'post-self-insert-hook if
+  ;; eglot is disabled in the current buffer
+  (add-hook 'eglot-managed-mode-hook (lambda ()
+                                       (if eglot--managed-mode
+                                           (add-hook 'post-self-insert-hook #'auto-complete-at-point nil t)
+                                         (remove-hook 'post-self-insert-hook #'auto-complete-at-point t)))))
+
+(use-package flymake
+  :hook (prog-mode . flymake-mode)
+  ;; This first bind conflicts with eglot but is left here for
+  ;; demonstrative purposes
+  :bind (("C-h ." . display-local-help)
+        :map flymake-mode-map
+        ("C-c ! n" . flymake-goto-next-error)
+        ("C-c ! p" . flymake-goto-prev-error)
+        ("C-c ! l" . flymake-show-diagnostics-buffer)))
+
+#+end_src
