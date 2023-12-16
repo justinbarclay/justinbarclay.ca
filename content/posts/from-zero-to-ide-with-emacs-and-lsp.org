@@ -1,10 +1,11 @@
 #+TITLE: From Zero To IDE with Emacs and LSP
-#+date: <2023-12-11 Mon>
+#+date: <2023-12-15 Fri>
 #+author: Justin Barclay
 #+description: Using Emacs' built-in functionality to get code completion and more
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
+#+toc: true
 #+draft: false
 #+tags[]: emacs code-completion diagnostics eglot flymake
 
@@ -84,39 +85,39 @@ So, to summarize, our IDE should:
 
 For example:
 #+begin_src elisp
-(use-package emacs
- :ensure nil
- :init
- (load-theme 'some-theme))
+  (use-package emacs
+   :ensure nil
+   :init
+   (load-theme 'some-theme))
 #+end_src
 
 Reading the above snippet of code says that when emacs is initialized, ~:init~, to load the theme ~some-theme~. Setting ~:ensure~ to ~nil~ then tells Emacs' not to download from the package repositories defined in ~package-archives~. ~use-package~ can do much more, but you'll have to read elsewhere for that.
 
-* TODO Lipstick on a Pig 
+* TODO Lipstick on a Pig
 I'm a shallow person, and I am sure you are, too. I find it hard to use something when it looks ugly. The motivation just isn't there to use eyesores. So, let's fix that. Unfortunately, we're a bit limited. Emacs has only a handful of themes, and none are particularly charming.
 
 ** Themes
 - adwaita
 - deeper-blue
-- dichromacy 	
+- dichromacy
 - leuven
-- leuven-dark 	
+- leuven-dark
 - light-blue
-- manoj-dark 	
+- manoj-dark
 - misterioso
-- modus-operandi 	
+- modus-operandi
 - modus-operandi-deuteranopia
-- modus-operandi-tinted 	
+- modus-operandi-tinted
 - modus-operandi-tritanopia
-- modus-vivendi 	
+- modus-vivendi
 - modus-vivendi-deuteranopia
-- modus-vivendi-tinted 	
+- modus-vivendi-tinted
 - modus-vivendi-tritanopia
-- tango 	
+- tango
 - tango-dark
-- tsdh-dark 	
+- tsdh-dark
 - tsdh-light
-- wheatgrass 	
+- wheatgrass
 - whiteboard
 - wombat
 
@@ -133,7 +134,7 @@ If you prefer a light ~theme~, you can't go wrong with dichromacy.
 ** Facing the Music
 Programming fonts are a very personal choice; if you're like me, your personal choice is rarely the system default font. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case that contains information on what font to render and how it should look. This function takes in a set of arguments: the face's name, what frame this face should be applied to, and the list of attributes to apply to the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to further refine the look you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
 
-#+begin_src elisp 
+#+begin_src elisp
   ;; (set-face-attribute face frame &rest arguments)
   (use-package emacs
   ;;...
@@ -176,7 +177,7 @@ It's often encouraged to turn off the menu bar as well, but if you ever get lost
   (menu-bar-mode -1)
 #+end_src
 
-By default, calling ~M-x~ is a bit bare. However, emacs comes with a couple of modes to help with that. There is the ancient [[https://www.gnu.org/software/emacs/manual/html_mono/ido.html][ido-mode]], the more recent [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Icomplete.html][icomplete-mode]], and the slight enhancement to ~icomplete-mode~ called ~fido-mode~. By default, both of these modes expand all the options horizontally in the minibuffer. Still, they have alternatives that I prefer, which expand the options vertically, called ~icomplete-vertical-mode~ and ~fido-vertical-mode~.
+By default, calling ~M-x~ is a bit bare. However, emacs comes with a couple of modes to help with that. There is the ancient [[https://www.gnu.org/software/emacs/manual/html_mono/ido.html][ido-mode]], the more recent [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Icomplete.html][icomplete-mode]], and the slight enhancement to ~icomplete-mode~ called ~fido-mode~. By default, both of these modes expand all the options horizontally in the [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Minibuffer.html][minibuffer]]. Still, they have alternatives that I prefer, which expand the options vertically, called ~icomplete-vertical-mode~ and ~fido-vertical-mode~.
 
 #+begin_src elisp
   (fido-vertical-mode)
@@ -184,7 +185,7 @@ By default, calling ~M-x~ is a bit bare. However, emacs comes with a couple of m
 
 ** End of the beginning
 This still isn't the prettiest-looking editor, but I've improved the situation. If we combine all of our configurations, we can start our config file at ~$HOME/.emacs.d/init.el~
-#+begin_src elisp :tangle /tmp/emacs/init.el
+#+begin_src elisp
   (use-package emacs
     :init
     (tool-bar-mode -1)
@@ -201,7 +202,7 @@ This still isn't the prettiest-looking editor, but I've improved the situation. 
 * Major Modes and Highlighting
 Now that things are looking better, let's learn how to customize [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Major-Modes.html][major modes]]. A major mode describes the behaviour associated with a buffer. This behaviour is generally syntax highlighting, cursor movement, and some default keybindings/interactions for buffers related to source files. ~ruby-ts-mode~ is Emacs' major mode that utilizes [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] for syntax-highlighting.
 
-Most major modes in Emacs that are ~tree-sitter~ based have ~-ts-~ within the name. So theoretically, you could call ~ruby-ts-mode~ and have ~tree-sitter~ based ruby syntax highlighting for your files. 
+Most major modes in Emacs that are ~tree-sitter~ based have ~-ts-~ within the name. So theoretically, you could call ~ruby-ts-mode~ and have ~tree-sitter~ based ruby syntax highlighting for your files.
 #+begin_src elisp
   (use-package ruby-ts-mode
     :mode "\\.rb\\'"
@@ -253,11 +254,11 @@ You can also set some key bindings yourself. For instance, what about jumping to
 Or you can use bind-key to simplify this.
 #+begin_src elisp
   (use-package bind-key)
-  
+
   (use-package ruby-ts-mode
     :bind (:map ruby-ts-mode-map
-                ("C-c r b" . 'treesit-beginning-of-defun)
-                ("C-c r e" . 'treesit-end-of-defun))
+                ("C-c r b" . treesit-beginning-of-defun)
+                ("C-c r e" . treesit-end-of-defun))
     ;;...
     )
 #+end_src
@@ -290,7 +291,7 @@ The subword minor mode replaces the basic word-oriented movement and editing com
 #+end_quote
 ** Putting it all together
 With those tweaks and adjustments, we can define our ruby config like so:
-#+begin_src elisp :tangle /tmp/emacs/init.el
+#+begin_src elisp
   (use-package ruby-ts-mode
     :mode "\\.rb\\'"
     :mode "Rakefile\\'"
@@ -304,7 +305,7 @@ With those tweaks and adjustments, we can define our ruby config like so:
     (ruby-indent-tabs-mode nil))
 #+end_src
 * Codes sense and completion
-[[https://microsoft.github.io/language-server-protocol/][Language Servers]] have becomes the industry standard for getting [[https://en.wikipedia.org/wiki/Intelligent_code_completion][intellisense]] like behaviour from your editor. And, with the release of version 29, Emacs has built-in support for LSP with [[https://www.gnu.org/software/emacs/manual/html_node/eglot/index.html][Eglot]], which stands for Emacs Polyglot.
+[[https://microsoft.github.io/language-server-protocol/][Language Servers]] have becomes the industry standard for getting [[https://en.wikipedia.org/wiki/Intelligent_code_completion][IntelliSense]] like behaviour from your editor. And, with the release of version 29, Emacs has built-in support for LSP with [[https://www.gnu.org/software/emacs/manual/html_node/eglot/index.html][Eglot]], which stands for Emacs Polyglot.
 
 Some of the features Eglot [[https://www.gnu.org/software/emacs/manual/html_node/eglot/Eglot-Features.html][provides]]:
 - At-point documentation
@@ -314,6 +315,7 @@ Some of the features Eglot [[https://www.gnu.org/software/emacs/manual/html_node
 - completion of symbol at point
 - automatic code formatting
 - integration with popular third-party packages including [[https://github.com/joaotavora/yasnippet][yasnippet]], [[https://github.com/jrblevin/markdown-mode][markdown-mode]], [[https://github.com/company-mode/company-mode][company-mode]] or [[https://github.com/minad/corfu][corfu]].
+- support for over 40 [[https://github.com/joaotavora/eglot#connecting-to-a-server][language servers]]
 
 Luckily, Eglot is easy to set up. We can use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Basic-Major-Modes.html][prog-mode-hook]] and Eglot's ~eglot-ensure~ function to attempt to start a language server for all programming related buffers.
 
@@ -337,12 +339,16 @@ Eglot comes with several of [[https://www.gnu.org/software/emacs/manual/html_nod
 | buffer-navigation              | [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Imenu.html][imenu]]               |
 | jump to definition/find useage | [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Xref.html][xref]]                |
 
+#+html_attr :class warning
+#+begin_quote
+It is up to you to make sure that your language server is installed. Eglot will not install it for you.
+#+end_quote
 ** Adding Documentation
 In general, I think it's best to enable ~eldoc~ everywhere
 
 [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Programming-Language-Doc.html][Eldoc]], which started out as ~emacs-lips documentation~, is Emacs' documentation library. When enabled, it shows either the function's documentation or, barring that, the argument list for the function in the echo area. However, this documentation is only limited to a line or two of information. If you want the full document that Emacs' has for that function, class, or method, then Emacs gives you ~display-local-help~, which is bound to ~C-h .~.
 
-#+begin_src elisp :tangle /tmp/emacs/init.el
+#+begin_src elisp
 (use-package eldoc
   :init
   (global-eldoc-mode))
@@ -366,10 +372,10 @@ Eglot has many built-in functions, and I think some should be elevated to keybin
     ;;.
     :bind (:map
            eglot-mode-map
-           ("C-c c a" . 'eglot-code-actions)
-           ("C-c c o" . 'eglot-code-actions-organize-imports)
-           ("C-c c r" . 'eglot-rename)
-           ("C-c c f" . 'eglot-format)))
+           ("C-c c a" . eglot-code-actions)
+           ("C-c c o" . eglot-code-actions-organize-imports)
+           ("C-c c r" . eglot-rename)
+           ("C-c c f" . eglot-format)))
 #+end_src
 
 ** Criticisms
@@ -402,7 +408,7 @@ Of course, if you only want completions to pop up at your behest, you can ignore
 :alt-title: Sensing the end of our completions
 :END:
 
-#+begin_src elisp :tangle /tmp/emacs/init.el
+#+begin_src elisp
   (use-package eglot
     :hook (prog-mode . eglot-ensure)
     ;; The first 5 bindings aren't needed here, but are a good
@@ -414,10 +420,10 @@ Of course, if you only want completions to pop up at your behest, you can ignore
            ("M-," . xref-go-back)
            :map
            eglot-mode-map
-           ("C-c c a" . 'eglot-code-actions)
-           ("C-c c o" . 'eglot-code-actions-organize-imports)
-           ("C-c c r" . 'eglot-rename)
-           ("C-c c f" . 'eglot-format))
+           ("C-c c a" . eglot-code-actions)
+           ("C-c c o" . eglot-code-actions-organize-imports)
+           ("C-c c r" . eglot-rename)
+           ("C-c c f" . eglot-format))
     :config
     (defvar complete-at-point--timer nil "Timer for triggering complete-at-point.")
 
@@ -461,7 +467,7 @@ Now, your buffers will light up a Christmas tree and yell at you for all of your
   - flymake-show-buffer-diagnostics
 
 Unfortunately, none of these are bound to key chords. But we can fix that!
-#+begin_src elisp :tangle /tmp/emacs/init.el
+#+begin_src elisp
   (use-package flymake
     :hook (prog-mode . flymake-mode)
     ;; This first bind conflicts with eglot but is left here for
@@ -471,6 +477,15 @@ Unfortunately, none of these are bound to key chords. But we can fix that!
           ("C-c ! n" . flymake-goto-next-error)
           ("C-c ! p" . flymake-goto-prev-error)
           ("C-c ! l" . flymake-show-diagnostics-buffer)))
+#+end_src
+
+** Dealing with a bug in Eglot
+When Eglot is enabled in a buffer, it controls the error diagnostic functionalities that Flymake normally handles. However, in my experience, Eglot has problems extracting diagnostics from the Ruby language server [[https://solargraph.org/][solargraph]]. Instead, I had to disable Eglot's integration with flymake and rely on linters outside of the language servers.
+#+begin_src elisp
+(use-package eglot
+  ;;...
+  :custom
+  (eglot-stay-out-of '(flymake)))
 #+end_src
 
 * Version Control
@@ -499,12 +514,10 @@ You don't need to add ~vc~ to your config file, but it may help to have some rem
            ("C-x v v" vc-next-action))
 #+end_src
 
-This is only a tiny sampling of what ~vc.el~ can do, so I encourage you to read the docs and explore more.
-
 ** Conflicting advice
 I'd be remiss not to mention Emacs' two systems for dealing with merge conflict. You have access to ~smerge~, which stands for simple merge, that lets you put your cursor within the conflict and choose to keep the top, bottom, or both.
 
-#+begin_src elisp :tangle /tmp/init.el
+#+begin_src elisp
   (use-package smerge-mode
     :bind (:map smerge-mode-map
                 ("C-c ^ u" . smerge-keep-upper)
@@ -515,137 +528,167 @@ I'd be remiss not to mention Emacs' two systems for dealing with merge conflict.
 
 Or there is [[https://www.gnu.org/software/emacs/manual/html_mono/ediff.html][ediff]], which is outside of the scope of this article to explain how to use.
 ** More Info
-Version Control is complicated, and Emacs tries to simplify things or make them more idiomatic.
+This is only a tiny sampling of what ~vc.el~ can do, so I encourage you to read the docs and explore more.
 
 *** Videos
 - https://protesilaos.com/codelog/2020-04-10-emacs-smerge-ediff/
 - https://protesilaos.com/codelog/2020-03-30-emacs-intro-vc/
 - https://www.youtube.com/watch?v=UiO7xJb5Gdw
 
-* TODO Write Conclusion
+* A New Beginning
+So, what have I accomplished?
 
-#+begin_src elisp
-(use-package emacs
-  :init
-  (tool-bar-mode -1)
-  (when scroll-bar-mode
-    (scroll-bar-mode -1))
-  (load-theme 'wombat)
-  (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height 160)
-  :custom
-  (treesit-language-source-alist
-   '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
+Let's look over our final config and see what we have?
+#+begin_src elisp :tangle /tmp/emacs/init.el
+  (use-package emacs
+    :init
+    (tool-bar-mode -1)
+    (when scroll-bar-mode
+      (scroll-bar-mode -1))
+    (load-theme 'wombat)
+    (set-face-attribute 'default nil :font "CaskaydiaCove Nerd Font Mono" :height 160)
+    (fido-vertical-mode)
+    :config
+    (setq treesit-language-source-alist
+          '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
 
-(use-package ruby-ts-mode
-  :mode "\\.rb\\'"
-  :mode "Rakefile\\'"
-  :mode "Gemfile\\'"
-  :hook (ruby-ts-mode . subword-mode)
-  :bind (:map ruby-ts-mode-map
-              ("C-c r b" . 'treesit-beginning-of-defun)
-              ("C-c r e" . 'treesit-end-of-defun))
-  :custom
-  (ruby-indent-level 2)
-  (ruby-indent-tabs-mode nil))
+  (use-package ruby-ts-mode
+    :mode "\\.rb\\'"
+    :mode "Rakefile\\'"
+    :mode "Gemfile\\'"
+    :hook (ruby-ts-mode . subword-mode)
+    :bind (:map ruby-ts-mode-map
+                ("C-c r b" . treesit-beginning-of-defun)
+                ("C-c r e" . treesit-end-of-defun))
+    :custom
+    (ruby-indent-level 2)
+    (ruby-indent-tabs-mode nil))
 
-(use-package eldoc
-  :init
-  (global-eldoc-mode))
+  (use-package eldoc
+    :init
+    (global-eldoc-mode))
 
-(use-package eglot
-  :hook (prog-mode . eglot-ensure)
-  ;; The first 5 bindings aren't needed here, but are a good
-  ;; reminder of what they are bound too
-  :bind (("M-TAB" . completion-at-point)
-         ("M-g i" . imenu)
-         ("C-h ." . display-local-help)
-         ("M-." . xref-find-definitions)
-         ("M-," . xref-go-back)
-         :map
-         eglot-mode-map
-         ("C-c c a" . 'eglot-code-actions)
-         ("C-c c o" . 'eglot-code-actions-organize-imports)
-         ("C-c c r" . 'eglot-rename)
-         ("C-c c f" . 'eglot-format))
-  :config
-  (defvar complete-at-point--timer nil "Timer for triggering complete-at-point.")
+  (use-package eglot
+    :hook (prog-mode . eglot-ensure)
+    :bind (:map
+           eglot-mode-map
+           ("C-c c a" . eglot-code-actions)
+           ("C-c c o" . eglot-code-actions-organize-imports)
+           ("C-c c r" . eglot-rename)
+           ("C-c c f" . eglot-format))
+    :custom
+    (eglot-stay-out-of '(flymake))
+    :config
+    (defvar complete-at-point--timer nil "Timer for triggering complete-at-point.")
 
-  (defun auto-complete-at-point (&rest _)
-    "Set a time to complete the current symbol at point in 0.1 seconds"
-    (when (and (not (minibufferp)))
-      ;; If a user inserts a character while a timer is active, reset
-      ;; the current timer
-      (when (timerp complete-at-point--timer)
-        (cancel-timer complete-at-point--timer))
-      (setq complete-at-point--timer
-            (run-at-time 0.2 nil
-                         (lambda ()
-                           ;; Clear out the timer and run
-                           ;; completion-at-point
-                           (when (timerp complete-at-point--timer)
-                             (cancel-timer complete-at-point--timer))
-                           (setq complete-at-point--timer nil)
-                           (completion-at-point))))))
-  ;; Add a hook to enable auto-complete-at-point when eglot is enabled
-  ;; this allows use to remove the hook on 'post-self-insert-hook if
-  ;; eglot is disabled in the current buffer
-  (add-hook 'eglot-managed-mode-hook (lambda ()
-                                       (if eglot--managed-mode
-                                           (add-hook 'post-self-insert-hook #'auto-complete-at-point nil t)
-                                         (remove-hook 'post-self-insert-hook #'auto-complete-at-point t)))))
+    (defun auto-complete-at-point (&rest _)
+      "Set a time to complete the current symbol at point in 0.1 seconds"
+      (when (and (not (minibufferp)))
+        ;; If a user inserts a character while a timer is active, reset
+        ;; the current timer
+        (when (timerp complete-at-point--timer)
+          (cancel-timer complete-at-point--timer))
+        (setq complete-at-point--timer
+              (run-at-time 0.2 nil
+                           (lambda ()
+                             ;; Clear out the timer and run
+                             ;; completion-at-point
+                             (when (timerp complete-at-point--timer)
+                               (cancel-timer complete-at-point--timer))
+                             (setq complete-at-point--timer nil)
+                             (completion-at-point))))))
+    ;; Add a hook to enable auto-complete-at-point when eglot is enabled
+    ;; this allows use to remove the hook on 'post-self-insert-hook if
+    ;; eglot is disabled in the current buffer
+    (add-hook 'eglot-managed-mode-hook (lambda ()
+                                         (if eglot--managed-mode
+                                             (add-hook 'post-self-insert-hook #'auto-complete-at-point nil t)
+                                           (remove-hook 'post-self-insert-hook #'auto-complete-at-point t)))))
 
-(use-package flymake
-  :hook (prog-mode . flymake-mode)
-  ;; This first bind conflicts with eglot but is left here for
-  ;; demonstrative purposes
-  :bind (("C-h ." . display-local-help)
-        :map flymake-mode-map
-        ("C-c ! n" . flymake-goto-next-error)
-        ("C-c ! p" . flymake-goto-prev-error)
-        ("C-c ! l" . flymake-show-diagnostics-buffer)))
-
+  (use-package flymake
+    :hook (prog-mode . flymake-mode)
+    :bind (:map flymake-mode-map
+                ("C-c ! n" . flymake-goto-next-error)
+                ("C-c ! p" . flymake-goto-prev-error)
+                ("C-c ! l" . flymake-show-buffer-diagnostics)))
 #+end_src
+
+   - ✅ Syntax Highlighting for programming language of choice
+   - ✅ Display code diagnostics
+   - ⚠️ Smart auto-completion
+     - ❌ Autocomplete in buffer
+     - ✅ Autocomplete in minibuffer
+   - ⚠️ Make Emacs look pretty
+   - ✅ Have support for version control
+     - ✅ including built-in support for seeing changes made
+
+After reviewing the goals I set out for myself, we came very close to getting a good IDE experience. Unfortunately, there are two places where I Think Emacs still falls short. The first and most important is that the in-buffer completion is entirely lacking. It feels like we're all still levering in the 90s and have to press ~M-TAB~ to get the entire list of candidates rather than having a menu alongside the cursor with a list of candidates that narrows as you type. The second is that the [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Mode-Line.html][modeline]] still looks like it's from a generation before. It relies on using ASCII chars to describe the current buffer state rather than Sags or Emoji where available, and the modeline can be overly full of information where you aren't sure what is important. Third, I think that discoverability of Emacs features and keybindings is lacking. For instance I didn't learn about ~help-at-point~ until I wrote this article!
+
+Luckily, the Emacs maintainers and the community have worked hard to ensure my experience isn't relegated to only the code in the core of Emacs. As can be seen by my ~auto-complete-at-point~ if I think something should be enhanced, I can build it myself. For the little things, this is also what I [[/posts/sharpening-your-toolshed][encourage]] you to do as well. For the big things, I can use [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Packages.html][~package.el~]] and go to any of the Emacs' package registries, like [[https://elpa.gnu.org/][Elpa]], [[https://elpa.nongnu.org/][NonGnu Elpa]], or [[https://melpa.org/#/][Melpa]], and find a package that fits my needs.
+
+I reiterate Emacs doesn't have all the toys included, but I think they've done a great job at making it so that I only need 60 lines of code to get Emacs to a point where I can be productive.
+
 * Bonus
-** Expanding to support JavaScript
+** Expanding to support to other languages
 At the beginning of this post, I mentioned that it would be easy to extend support for other languages, and to prove my point, here is what I would do for JavaScript and TypeScript.
-#+begin_src elisp
+#+begin_src elisp :tangle /tmp/emacs/init.el
+  ;; This package contains js-base-mode, js-mode, and js-ts-mode
   (use-package js-base-mode
-    :ensure nil
+    :defer 't
+    :ensure js ;; I care about js-base-mode but it is locked behind the feature "js"
     :custom
     (js-indent-level 2)
     :config
+    (add-to-list 'treesit-language-source-alist '(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src"))
     (unbind-key "M-." js-base-mode-map))
 
-  (use-package typescript-ts-base-mode
-    :ensure nil
+  (use-package typescript-ts-mode
+    :ensure typescript-ts-mode
+    :defer 't
     :custom
     (typescript-indent-level 2)
     :config
+    (add-to-list 'treesit-language-source-alist '(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
+    (add-to-list 'treesit-language-source-alist '(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
     (unbind-key "M-." typescript-ts-base-mode-map))
 #+end_src
 ** External Packages
-I've built a pretty competent IDE now, but it still has a few drawbacks. However, we can alleviate some of my complaints with the packages below.
+We can alleviate all of my major complaints by utilizing the packages on Elpa.
 
 [[https://github.com/justbur/emacs-which-key][which-key]] helps you remember or discover key bindings by popping up suggestions of what to press next based on the last key chord you pressed.
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package which-key
-    :hook (after-init . which-key-mode))
+    :ensure t
+    :commands (which-key-mode)
+    :init
+    (which-key-mode))
 #+end_src
 
-Instead of needing to write our own autocomplete framework, auto-complete-at-point, we can rely on the stalwart [[http://company-mode.github.io/][company-mode]].
+Instead of needing to write our own autocomplete framework, like ~auto-complete-at-point~, we can rely on the stalwart [[http://company-mode.github.io/][company-mode]].
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package company
-    :hook (after-init . global-company-mode)
+    :ensure t
+    :commands (global-company-mode)
+    :init
+    (global-company-mode)
     :custom
     (company-tooltip-align-annotations 't)
     (company-minimum-prefix-length 1)
     (company-idle-delay 0.1))
 #+end_src
 
-And finally, to help with the overall look of Emacs, we can modernize the look with [[https://github.com/rougier/nano-modeline][nano-modeline]].
+ Another level up, if eglot detects that ~markdown-mode~ is also installed, it will stylize docs generated by LSP servers
+#+begin_src elisp :tangle /tmp/emacs/init.el
+  (use-package markdown-mode
+    :ensure t
+    :magic "\\.md\\'")
+#+end_src
+
+
+And finally, we can cure my aesthetic woes by using [[https://github.com/rougier/nano-modeline][nano-modeline]] to spruce up the place.
 #+begin_src elisp :tangle /tmp/emacs/init.el
   (use-package nano-modeline
-    :ensure nano-modeline
+    :ensure t
     :init
     (nano-modeline-prog-mode t)
     :custom
@@ -661,7 +704,7 @@ And finally, to help with the overall look of Emacs, we can modernize the look w
     (elfeed-search-mode  . nano-modeline-elfeed-search-mode)
     (term-mode           . nano-modeline-term-mode)
     (xwidget-webkit-mode . nano-modeline-xwidget-mode)
-    (messages-buffer-mode. nano-modeline-message-mode)
+    (messages-buffer-mode . nano-modeline-message-mode)
     (org-capture-mode    . nano-modeline-org-capture-mode)
     (org-agenda-mode     . nano-modeline-org-agenda-mode))
 #+end_src
