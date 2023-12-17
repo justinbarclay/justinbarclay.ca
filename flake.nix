@@ -4,7 +4,7 @@
   # Nixpkgs / NixOS version to use.
   inputs = {
     nixpkgs = {
-      url = "nixpkgs/nixos-21.11";
+      url = "nixpkgs/nixos-unstable";
     };
   };
 
