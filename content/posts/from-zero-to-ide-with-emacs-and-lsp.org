@@ -105,7 +105,7 @@ If we look at this code snippet, it says that when Emacs is initialized, ~:init~
 :PROPERTIES:
 :CUSTOM_ID: 💄🐷
 :END:
-I'm a shallow person, I find it hard to use something when it looks ugly. The motivation just isn't there to use something that is an eyesore. So, let's fix that. Unfortunately, we're a bit limited. Emacs has only a handful of themes, and none are particularly charming.
+I'm a shallow person, and I find it hard to use something when it looks ugly. The motivation just isn't there to use something that is an eyesore. So, let's fix that. Unfortunately, we're a bit limited. Emacs has only a handful of themes, and none are particularly charming.
 
 ** Themes
 | theme          | palette                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -224,11 +224,11 @@ By default, calling ~M-x~ is a bit bare. However, emacs comes with a couple of m
 
 ** End of the beginning
 :PROPERTIES:
-:CUSTOM_ID: 🛑
+:CUSTOM_ID: 🛑𝌾
 :END:
 This still isn't the prettiest-looking editor, but I've improved the situation. If I combine all the configuration snippets, we can start our config file at ~$HOME/.emacs.d/init.el~
 #+begin_src elisp
-𝌾  (use-package emacs
+  (use-package emacs
     :init
     (tool-bar-mode -1)
     (when scroll-bar-mode
@@ -336,7 +336,7 @@ But for now, we'll focus on whitespace:
     (ruby-indent-tabs-mode nil))
 #+end_src
 
-You can also tell Emacs to enable minor modes like [[https://www.gnu.org/software/emacs/manual/html_node/ccmode/Subword-Movement.html][subword-mode]] when your major mode starts up. All define a cons cell of the major-minor mode pairs  ~(major-mode . minor-mode)~ alongside the ~:hook~ keyword
+You can also tell Emacs to enable minor modes like [[https://www.gnu.org/software/emacs/manual/html_node/ccmode/Subword-Movement.html][subword-mode]] when your major mode starts up. I'll define a cons cell of the major-minor mode pairs  ~(major-mode . minor-mode)~ alongside the ~:hook~ keyword
 #+begin_src elisp
   (use-package ruby-ts-mode
     :hook (ruby-ts-mode . subword-mode))
@@ -457,7 +457,7 @@ Eglot has many built-in functions, and I think some should be elevated to keybin
 :PROPERTIES:
 :CUSTOM_ID: 😤
 :END:
-I think Emacs' built-in in-buffer completion system is still its weakest point. It lags behind all other major text editors, which provide completions as you type, and it provides those completions in a pop-up beside your cursor. Meanwhile, Emacs will only show you potential completions when you hit ~M-<TAB>~, and it shows completions outside of your current one. This feels non-ergonomic, and the community agrees with me. There have been at least [[https://github.com/auto-complete/auto-complete][3]] [[https://github.com/company-mode/company-mode][pop-up]] [[https://github.com/minad/corfu][completion]] frameworks for Emacs and I hope that one day soon Emacs core will on one.
+I think Emacs' built-in in-buffer completion system is still its weakest point. It lags behind all other major text editors, which provide completions as you type, and it provides those completions in a pop-up beside your cursor. Meanwhile, Emacs will only show you potential completions when you hit ~M-<TAB>~, and it shows completions outside of your current one. This feels non-ergonomic, and the community agrees with me. There have been at least [[https://github.com/auto-complete/auto-complete][3]] [[https://github.com/company-mode/company-mode][pop-up]] [[https://github.com/minad/corfu][completion]] frameworks for Emacs and I hope that one day soon Emacs core will settle on one.
 
 *** A minor fix
 Emacs doesn't come with a pop-up library. But we can use the magic of [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Timers.html][timers]] and [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Advising-Functions.html][advice]] to fix the autocomplete problem.
@@ -608,7 +608,7 @@ You don't need to add ~vc~ to your config file, but it may help to have some rem
 #+end_src
 
 ** Conflicting advice
-I'd be remiss not to mention Emacs' two systems for dealing with merge conflict. You have access to ~smerge~, which stands for simple merge, that lets you put your cursor within the conflict and choose to keep the top, bottom, or both.
+I'd be remiss not to mention Emacs' two systems for dealing with merge conflicts. You have access to ~smerge~, which stands for simple merge, that lets you put your cursor within the conflict and choose to keep the top, bottom, or both.
 
 #+begin_src elisp
   (use-package smerge-mode
