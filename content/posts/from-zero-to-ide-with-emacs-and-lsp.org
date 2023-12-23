@@ -1,5 +1,5 @@
 #+TITLE: From Zero To IDE with Emacs and LSP
-#+date: <2023-12-15 Fri>
+#+date: <2023-12-22 Fri>
 #+author: Justin Barclay
 #+description: Using Emacs' built-in functionality to get code completion and more
 #+section: ./posts
@@ -13,11 +13,13 @@
 @@html:<img style="max-height:700px" alt="Be the change you want to see." src="/ox-hugo/two-people-configuring-emacs.webp"/>@@
 @@html:</div>@@
 
-Emacs 29 has made great strides toward allowing users to craft their own IDE using only built-in packages. Of course, this has been a long time coming. Emacs is an ever-growing and ever-changing system. However, I mark the refactor of Flymake, a framework for displaying code diagnostics, in Emacs 26 as the beginning of the IDE renaissance for Emacs. Now, five years and three major versions later, I think the journey has reached its zenith with Emacs getting built-in support for [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] with [[https://github.com/joaotavora/eglot][Eglot]]. I want to see how close Emacs can get to an IDE-like experience.
+[[https://www.gnu.org/software/emacs/][Emacs 29]] has made great strides toward allowing users to craft their own Integrated Development Environment (IDE) using its built-in packages. This transformation didn't happen overnight; it's the culmination of Emacs' continuous evolution. A notable milestone was the revamp of Flymake in Emacs 26, a robust framework for code diagnostics, signaling the dawn of Emacs' IDE renaissance. Now, five years and three major versions later, I think the journey has ascended to new heights with built-in support for the [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] (LSP) via [[https://github.com/joaotavora/eglot][Eglot]].
 
-But what does it mean to be IDE-like?
+I want to see how close Emacs can get to an IDE-like experience.
 
-I'll use [[https://code.visualstudio.com/learn][VS Code]] as the gold standard for a programmable IDE. To find out what features make it special, we'll see what Microsoft calls out as important to its users as found on its [[https://code.visualstudio.com/learn][learn]] page:
+* What does it mean to be an IDE?
+
+I'll use [[https://code.visualstudio.com/learn][VS Code]] as the paragon of a programmable IDE. To find out what features make it special, we'll see what Microsoft calls out as [[https://code.visualstudio.com/learn][important]]:
 
 #+begin_quote
 Visual Studio Code is a free coding editor that helps you start coding quickly. Use it to code in any programming language, without switching editors. Visual Studio Code has support for many languages, including Python, Java, C++, JavaScript, and more.
@@ -89,7 +91,7 @@ So, to summarize, our IDE should:
 [[/ox-hugo/emacs-ide/plain-emacs.png]]
 
 
-...there was [[https://jwiegley.github.io/use-package/][use-package]]. ~use-package~ is a lisp [[https://wiki.c2.com/?LispMacro][macro]] that allows you to configure Emacs and its libraries and packages declaratively. ~use-package~ is a package that has been around for over [[https://github.com/jwiegley/use-package/commit/7ee0fcd0a09c2934e77bf5702e75ba4acba4299c][10 years]]. And it has gained such a foothold into the Emacs community that it landed in Emacs core for the release of [[https://www.gnu.org/software/emacs/manual/html_node/efaq/New-in-Emacs-29.html#:~:text=Emacs%20comes%20with%20the%20popular%20use-package][Emacs 29]].
+...there was [[https://jwiegley.github.io/use-package/][use-package]], a lisp [[https://wiki.c2.com/?LispMacro][macro]] that allows you to configure Emacs and its libraries and packages declaratively. ~use-package~ is a package that has been around for over [[https://github.com/jwiegley/use-package/commit/7ee0fcd0a09c2934e77bf5702e75ba4acba4299c][10 years]]. And it has gained such a foothold into the Emacs community that it landed in Emacs core for the release of [[https://www.gnu.org/software/emacs/manual/html_node/efaq/New-in-Emacs-29.html#:~:text=Emacs%20comes%20with%20the%20popular%20use-package][Emacs 29]].
 
 For example:
 #+begin_src elisp
@@ -99,9 +101,9 @@ For example:
    (load-theme 'some-theme))
 #+end_src
 
-Reading the above snippet of code says that when emacs is initialized, ~:init~, to load the theme ~some-theme~. Setting ~:ensure~ to ~nil~ then tells Emacs' not to download from the package repositories defined in ~package-archives~. ~use-package~ can do much more, but you'll have to read elsewhere [[https://www.masteringemacs.org/article/spotlight-use-package-a-declarative-configuration-tool][for that]].
+The above snippet of code says that when Emacs is initialized, ~:init~, it should load the theme ~some-theme~. Setting ~:ensure~ to ~nil~ then tells Emacs' not to download from the package repositories defined in [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Package-Archives][~package-archives~]]. ~use-package~ can do much more, but you'll have to read elsewhere [[https://www.masteringemacs.org/article/spotlight-use-package-a-declarative-configuration-tool][for that]].
 
-* Lipstick on a Pig
+* Theme and Aesthetics: More Than Just Lipstick on a Pig
 :PROPERTIES:
 :CUSTOM_ID: 💄🐷
 :END:
@@ -128,12 +130,15 @@ I'm a shallow person, and I am sure you are, too. I find it hard to use somethin
 | whiteboard     | [[/ox-hugo/emacs-ide/palettes/whiteboard-background.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-constant-face.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-doc-face.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-keyword-face.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-preprocessor-face.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-regexp-grouping-construct.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-string-face.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-type-face.svg]] [[/ox-hugo/emacs-ide/palettes/whiteboard-font-lock-variable-name-face.svg]]                                     |
 | wombat         | [[/ox-hugo/emacs-ide/palettes/wombat-background.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-constant-face.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-doc-face.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-keyword-face.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-preprocessor-face.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-regexp-grouping-construct.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-string-face.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-type-face.svg]] [[/ox-hugo/emacs-ide/palettes/wombat-font-lock-variable-name-face.svg]]                                                                         |
 
-I like dark themes, and ~wombat~ has the least garish of colours for dark themes, so I'll go with that.
+Our quest to beautify Emacs might initially seem daunting due to its limited theme selection. However, choosing a theme like wombat for dark-mode enthusiasts or dichromacy for those favoring light themes can make a significant difference.
+
+
 #+begin_src elisp
 (load-theme 'wombat)
 #+end_src
 
-If you prefer a light ~theme~, you can't go wrong with dichromacy.
+or
+
 #+begin_src elisp
 (load-theme 'dichromacy)
 #+end_src
@@ -142,7 +147,7 @@ If you prefer a light ~theme~, you can't go wrong with dichromacy.
 :PROPERTIES:
 :CUSTOM_ID: 🎶
 :END:
-Programming fonts are a very personal choice; if you're like me, your personal choice is rarely the system default font. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case that contains information on what font to render and how it should look. This function takes in a set of arguments: the face's name, what frame this face should be applied to, and the list of attributes to apply to the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to further refine the look you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
+Programming fonts are a very personal choice. You can change the default font by using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Attribute-Functions.html#index-set_002dface_002dattribute][set-face-attribute]]. Where [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces.html][face]], is kind of like a CSS Class. It's a named collection of graphical attributes for display, ~default~ in our case that contains information on what font to render and how it should look. This function takes in a set of arguments: the face's name, what frame this face should be applied to, and the list of attributes to apply to the face. We only really care about setting the ~font~ and ~height~ attributes for the ~default~ face. If you want to refine things further, you can find all the face attributes [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html][here]].
 
 #+begin_src elisp
   ;; (set-face-attribute face frame &rest arguments)
@@ -243,7 +248,7 @@ This still isn't the prettiest-looking editor, but I've improved the situation. 
 :PROPERTIES:
 :CUSTOM_ID: 🪖
 :END:
-Now that things are looking better, let's learn how to customize [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Major-Modes.html][major modes]]. A major mode describes the behaviour associated with a buffer. This behaviour is generally syntax highlighting, cursor movement, and some default keybindings/interactions for buffers related to source files. ~ruby-ts-mode~ is Emacs' major mode that utilizes [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] for syntax-highlighting.
+Now that things are looking better, let's learn how to customize [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Major-Modes.html][major modes]]. A major mode describes the behaviour associated with a buffer. This behaviour generally consists of syntax highlighting, cursor movement, and some default keybindings/interactions for buffers related to source files. ~ruby-ts-mode~ is Emacs' major mode that utilizes [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] for syntax-highlighting.
 
 Most major modes in Emacs that are ~tree-sitter~ based have ~-ts-~ within the name. So theoretically, you could call ~ruby-ts-mode~ and have ~tree-sitter~ based ruby syntax highlighting for your files.
 #+begin_src elisp
@@ -272,7 +277,7 @@ So, for Ruby, that would look like
      '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
 #+end_src
 
-Then, you must run the command ~treesit-install-language-grammar~ and select the language you want to install.
+Then, you must run the command ~treesit-install-language-grammar~ and select the language you want to install. IE: ~M-x treesit-install-language-grammar RET ruby RET~.
 
 For a more in-depth look into how to set up ~tree-sitter~ for Emacs 29, see Mickey Peterson's [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][article]].
 
@@ -281,9 +286,9 @@ For a more in-depth look into how to set up ~tree-sitter~ for Emacs 29, see Mick
 :CUSTOM_ID: ⌨️
 :END:
 
-Now that we have a working ts-mode, what else can Emacs do for us? Well, for Ruby and many other languages, it will also add keybindings to simplify common operations.
+Now that we have a working ts-mode, what else can Emacs do for us? It will also add keybindings to simplify common operations for Ruby and many other languages.
 
-Alongside Emacs' regular keybindings, see the [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][cheatsheet]], ~ruby-ts-mode~ adds the following keybindings
+Alongside Emacs' regular [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][keybindings]], ~ruby-ts-mode~ adds the following:
 
 | Key Bindings | Interactive function      | Description                                                    |
 |--------------+---------------------------+----------------------------------------------------------------|
@@ -318,6 +323,7 @@ And if you forget what these key chords, or any key chords, you can use ~C-h k~ 
 #+begin_quote
 ruby-beginning-of-defun is an interactive and natively compiled function defined in ruby-mode.el.gz
 #+end_quote
+
 ** Customizing Ruby Mode
 :PROPERTIES:
 :CUSTOM_ID: 🔴💎
@@ -688,11 +694,13 @@ Let's look over our final config and see what we have.
    - ✅ Have support for version control
      - ✅ including built-in support for seeing changes made
 
-After reviewing the goals I set out for myself, we came very close to getting a good IDE experience. Unfortunately, there are a few places where I Think Emacs still needs to catch up. The first and most important is that the in-buffer completion needs to be improved. We're still living in the 90s and must press ~M-TAB~ to get the entire list of candidates rather than having a menu alongside the cursor with a list of candidates that narrows as you type. The second is that the [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Mode-Line.html][modeline]] still looks like it's from a generation before. It relies on using ASCII chars to describe the current buffer state rather than Sags or Emoji where available, and the modeline can be overly full of information where you aren't sure what is important. Third, the discoverability of Emacs features and keybindings is lacking. For instance, I didn't learn about ~help-at-point~ until I wrote this article!
+Reflecting on this journey, Emacs 29 has come close to an authentic IDE experience. For instance, having to use M-TAB for a candidate list feels outdated, like a relic from the 90s. The default [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Mode-Line.html][modeline]] also leaves much to be desired. It's cluttered, using obscure letters and ASCII symbols to display buffer information and listing every minor mode in use, which can be overwhelming.
 
-Luckily, the Emacs maintainers and the community have worked hard to ensure my experience isn't relegated to only the code in the core of Emacs. As can be seen by my ~auto-complete-at-point~ if I think something should be enhanced, I can build it myself. For the little things, this is also what I [[/posts/sharpening-your-toolshed][encourage]] you to do as well. For the big things, I can use [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Packages.html][~package.el~]] and go to any of the Emacs' package registries, like [[https://elpa.gnu.org/][Elpa]], [[https://elpa.nongnu.org/][NonGnu Elpa]], or [[https://melpa.org/#/][Melpa]], and find a package that fits my needs.
+Finding Emacs' extensive features and keybindings often resembles navigating a labyrinth. I only discovered ~help-at-point~ while writing this article.
 
-Emacs doesn't have all the toys included, but they've done a great job making it fairly simple to configure Emacs to the point where I can be productive.
+However, the resilience and ingenuity of the Emacs community and its maintainers shine through these challenges. My ~auto-complete-at-point~ stands as a testament to the empowering nature of Emacs - if a feature is lacking or could be improved, the tools are there to craft it myself. This self-enhancement is something I [[/posts/sharpening-your-toolshed][advocate]] for. However, for the more substantial features, Emacs' [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Packages.html][~package.el~]] and package registries like [[https://elpa.gnu.org/][Elpa]], [[https://elpa.nongnu.org/][NonGnu Elpa]], and [[https://melpa.org/#/][Melpa]] are invaluable resources when I am looking for something that fits my needs.
+
+Emacs doesn't have all the toys I want included, but they've done a great job making it simple to configure Emacs to the point where I can be productive.
 * Additional Info and Features
 - Project
   + https://www.gnu.org/software/emacs/manual/html_node/emacs/Projects.html
