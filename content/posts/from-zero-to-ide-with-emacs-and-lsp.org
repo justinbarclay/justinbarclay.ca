@@ -1,5 +1,6 @@
 #+TITLE: From Zero To IDE with Emacs and LSP
 #+date: <2023-12-22 Fri>
+#+updated_ob: <2023-12-25 Mon>
 #+author: Justin Barclay
 #+description: Using Emacs' built-in functionality to get code completion and more
 #+section: ./posts
@@ -15,7 +16,7 @@
 
 [[https://www.gnu.org/software/emacs/][Emacs 29]] has made great strides toward allowing users to craft their own Integrated Development Environment (IDE) using its built-in packages. This transformation didn't happen overnight; it's the culmination of Emacs' continuous evolution. The refactor of Flymake, a robust framework for code diagnostics, in Emacs 26 marks the beginning of a new era for Emacs as an IDE. Now, five years and three major versions later, I think the journey has reached a zenith with the built-in support for the [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] (LSP) via [[https://github.com/joaotavora/eglot][Eglot]].
 
-I want to see how close Emacs can get to an IDE-like experience.
+I want to see how close Emacs can get to an IDE-like experience using only the tools Emacs core provides for us.
 
 * What does it mean to be an IDE?
 
