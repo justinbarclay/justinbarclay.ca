@@ -1,6 +1,6 @@
 #+TITLE: From Zero To IDE with Emacs and LSP
 #+date: <2023-12-22 Fri>
-#+updated_ob: <2023-12-25 Mon>
+#+updated_on: <2023-12-27 Wed>
 #+author: Justin Barclay
 #+description: Using Emacs' built-in functionality to get code completion and more
 #+section: ./posts
@@ -28,6 +28,7 @@ Visual Studio Code is a free coding editor that helps you start coding quickly. 
 
 To start with, we need built-in support for popular programming languages. For my example, I will build an IDE for Ruby, but expanding the functionality to any of the languages mentioned above is trivial.
 
+@@html:<s>@@
 #+begin_quote
   ### Collaborate and code remotely
 
@@ -35,6 +36,10 @@ To start with, we need built-in support for popular programming languages. For m
 #+end_quote
 
 This one I'll have to skip. Emacs aims to be a local first code editor with no reliance on external systems or services... and, well, Live Share requires someone to spend lots of money to maintain servers. This is well outside Emacs' or Emacs users' wheelhouse; I'll take the L here.
+@@html:</s>@@
+
+As it turns out, I mismembered it, and VS Code does not have Live Share baked into it.
+
 
 #+begin_quote
   ### Code to learn
@@ -56,7 +61,7 @@ And then we'll need a code-diagnostics, [[https://www.perforce.com/blog/qac/what
   You can also use the debugger in VS Code to step through each line of code and understand what is happening. Check out guides on how to use the debugger if you're coding in Python, Java, and JavaScript/TypeScript/Node.js.
 #+end_quote
 
-Like VS Code, Emacs doesn't need to support debugging Ruby, but it does have some built-in [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Starting-GUD.html][debugging]] capabilities.
+Like VS Code, Emacs doesn't have built-in support for debugging Ruby, but it does have some built-in [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Starting-GUD.html][debugging]] capabilities.
 
 #+begin_quote
   ### Make it yours with custom themes and colors
