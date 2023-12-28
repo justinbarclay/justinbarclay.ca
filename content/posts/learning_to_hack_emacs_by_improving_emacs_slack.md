@@ -40,7 +40,7 @@ Unfortunately, that isn't enough for me! I don't always want to demarcate text a
 
 Or sometimes I want to have text don some shiny new quotes!
 
-{{< figure src="/ox-hugo/garments.png" caption="Figure 1: Here we see some text being dressed in the freshest quotes of the season" >}}
+{{< figure src="/images/garments.png" caption="Figure 1: Here we see some text being dressed in the freshest quotes of the season" >}}
 
 ```emacs-lisp
 (defun jb/send-region-to-slack-quotes ()
@@ -58,7 +58,7 @@ Or sometimes I want to have text don some shiny new quotes!
                                  team)))
 ```
 
-{{< figure src="/ox-hugo/slack-quote-fail.gif" >}}
+{{< figure src="/images/slack-quote-fail.gif" >}}
 
 Sadly,  my simple solutions doesn't work. In [Markdown](https://daringfireball.net/projects/markdown/syntax#blockquote) you have to put ">" at the beginning of each line you want to specify as a quote.
 
@@ -249,7 +249,7 @@ There we go---after digging through source code and reading through alot of Emac
                                  team)))
 ```
 
-![](/ox-hugo/perfet-opt.gif)
+![](/images/perfet-opt.gif)
 Nothing is more beautiful than code working as intended. Well, maybe my children? No, you're right, code is definitely more beautiful than my children.
 
 I want to thank [@spiralganglion](http://twitter.com/spiralganglion) for being a tremendous friend and editor.

@@ -74,7 +74,7 @@ If you've never heard of org-mode, here's three key things to know before going 
 2.  This entire document was written using org-mode and babel
 3.  You can execute this document yourself, given you change your credentials ;)
 
-{{< figure src="/ox-hugo/org-mode-low-quality.gif" caption="Figure 1: Tweeting using literate programming and Emacs" >}}
+{{< figure src="/images/org-mode-low-quality.gif" caption="Figure 1: Tweeting using literate programming and Emacs" >}}
 
 
 ### Follow along at home! {#follow-along-at-home}
@@ -321,7 +321,7 @@ POST https://api.twitter.com/1.1/statuses/update.json?:body
 
 ## Taking things to 11 {#taking-things-to-11}
 
-{{< figure src="/ox-hugo/to_11.gif" >}}
+{{< figure src="/images/to_11.gif" >}}
 
 I think using org-mode and restclient to authenticate and post on Twitter is a little too mundane. Can we do anything more elaborate?
 

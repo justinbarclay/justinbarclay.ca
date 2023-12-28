@@ -9,7 +9,7 @@
 
 @@html:<div class="banner-image">@@
 #+attr_html: :alt "Two programmers putting a shine on their recently sharpened toolshed toolshed."
-@@html:<img src="/ox-hugo/sharpening-your-toolshed-part-2.webp">@@
+@@html:<img src="/images/sharpening-your-toolshed-part-2.webp">@@
 
 @@html:</div>@@
 
@@ -104,7 +104,7 @@ While =async-shell-command= is a good start for executing external programs in E
 
 #+NAME: git-sync running in Emacs
 #+attr_html: :max-width 800px :width 100% :type "video/webm" :controls true
-[[/ox-hugo/git-sync-example.webm]]
+[[/images/git-sync-example.webm]]
 
 Instead, I'm going to use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Asynchronous-Processes.html#index-make_002dprocess][=make-process=]] function to give me more control over the environment in which ~git-sync~ is run. =make-process= takes a lot arguments (=name=, =buffer=, =command=, =coding=, =noquery=, =stop=, =connection-type=, =filter=, =sentinel=, =stderr=, =file-handler=) but I'm only concerned with four:
 
@@ -213,6 +213,6 @@ Putting it all together, I can get the full minor-mode
 Now, I can admire the fruits of my labour. I can run =git-sync= in my diary after every save, and then I can obsessively open up the =*git-sync*= buffer to ensure it's working.
 #+NAME: git-sync running in Emacs
 #+attr_html: :max-width 800px :width 100% :type "video/webm" :controls true
-[[/ox-hugo/git-sync-example-2.webm]]
+[[/images/git-sync-example-2.webm]]
 
 Finally, I've got git-sync-mode to a state where using it no longer annoys me.

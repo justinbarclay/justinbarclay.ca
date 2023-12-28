@@ -18,7 +18,7 @@ TLDR; Move from as much work as possible from Ruby on Rails into SQL
 #+NAME: A woman feigning surprise
 #+attr_html: :alt "A woman feigning surprise"
 #+attr_html: :style width: 100%
-[[/ox-hugo/a-cyberpunk-astronaut-feigning-surprise-vaporwave.png]]
+[[/images/a-cyberpunk-astronaut-feigning-surprise-vaporwave.png]]
 
 Shocking, I know.
 

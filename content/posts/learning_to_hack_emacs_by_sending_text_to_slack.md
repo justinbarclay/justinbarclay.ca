@@ -27,7 +27,7 @@ Oh, well, because I am a developer and I like to share things, and I am lazy ---
 
 You, uh, don't wanna go for a ride do you?
 
-{{< figure src="/ox-hugo/carpet-ride.png" >}}
+{{< figure src="/images/carpet-ride.png" >}}
 
 
 ### TL;DR {#tl-dr}
@@ -266,7 +266,7 @@ My first test was to see if I could quickly modify this function to get a protot
 
 Now to test it!
 
-{{< figure src="/ox-hugo/hello-world.gif" caption="Figure 1: Example of the above function jb/say-hello-to-slack" >}}
+{{< figure src="/images/hello-world.gif" caption="Figure 1: Example of the above function jb/say-hello-to-slack" >}}
 
 
 ### Buffers, Regions, And Everything Between {#buffers-regions-and-everything-between}
