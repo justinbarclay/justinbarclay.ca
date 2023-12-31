@@ -2,10 +2,11 @@
 #+date: <2023-11-12 Sun>
 #+author: Justin Barclay
 #+description: Add a bit of polish to git-sync
+#+series[]: sharpening-your-toolshed
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
-#+tags[]: emacs git minor-mode sharpening-your-toolshed
+#+tags[]: emacs git minor-mode toolshed
 
 @@html:<div class="banner-image">@@
 #+attr_html: :alt "Two programmers putting a shine on their recently sharpened toolshed toolshed."

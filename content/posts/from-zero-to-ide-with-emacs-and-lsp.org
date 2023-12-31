@@ -1,6 +1,6 @@
 #+TITLE: From Zero To IDE with Emacs and LSP
 #+date: <2023-12-22 Fri>
-#+updated_on: <2023-12-27 Wed>
+#+updated_on: <2023-12-31 Sun>
 #+author: Justin Barclay
 #+description: Using Emacs' built-in functionality to get code completion and more
 #+section: ./posts
@@ -16,7 +16,7 @@
 
 [[https://www.gnu.org/software/emacs/][Emacs 29]] has made great strides toward allowing users to craft their own Integrated Development Environment (IDE) using its built-in packages. This transformation didn't happen overnight; it's the culmination of Emacs' continuous evolution. The refactor of Flymake, a robust framework for code diagnostics, in Emacs 26 marks the beginning of a new era for Emacs as an IDE. Now, five years and three major versions later, I think the journey has reached a zenith with the built-in support for the [[https://microsoft.github.io/language-server-protocol/][Language Server Protocol]] (LSP) via [[https://github.com/joaotavora/eglot][Eglot]].
 
-I want to see how close Emacs can get to an IDE-like experience using only the tools Emacs core provides for us.
+I want to see how closely I can configure my [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Init-File.html][~init.el~]] to get an IDE-like experience using only the tools Emacs core provides for me.
 
 * What does it mean to be an IDE?
 
@@ -114,6 +114,7 @@ If we look at this code snippet, it says that when Emacs is initialized, ~:init~
 I'm a shallow person, and I find it hard to use something when it looks ugly. The motivation just isn't there to use something that is an eyesore. So, let's fix that. Unfortunately, we're a bit limited. Emacs has only a handful of themes, and none are particularly charming.
 
 ** Themes
+#+attr_html: :class color-palette
 | theme          | palette                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 |----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | adwaita        | [[/images/emacs-ide/palettes/adwaita-background.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-constant-face.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-doc-face.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-keyword-face.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-preprocessor-face.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-regexp-grouping-construct.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-string-face.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-type-face.svg]] [[/images/emacs-ide/palettes/adwaita-font-lock-variable-name-face.svg]]                                                                |
@@ -438,7 +439,7 @@ Eldoc requires _some_ configuration to work. However, ~imenu~, ~xref~, and ~comp
 
 | Systems             | Keybindings | Description                                                                                     |
 |---------------------+-------------+-------------------------------------------------------------------------------------------------|
-| [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Imenu.html][iMenu]]               | ~M-g i~     | a system that uses [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Minibuffer-Completion.html][completing-read]] used for jumping to major definitions or sections of a file. |
+| [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Imenu.html][iMenu]]               | ~M-g i~     | a system that uses [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Minibuffer-Completion.html][completing-read]] for jumping to major definitions or sections of a file. |
 | [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Xref.html][xref]]                |             | Is an ancient system that finds references and definitions for a major mode's identifiers.     |
 |                     | ~M-.~       | Jump to the definition of the symbol at point                                                   |
 |                     | ~M-,~       | Jump back to the last location that invoke ~M-.~                                                |
@@ -690,7 +691,7 @@ Let's look over our final config and see what we have.
 
    - ✅ Syntax Highlighting for programming language of choice
    - ✅ Display code diagnostics
-   - ⚠️ Smart auto-completion
+   - ⚠️ Smart autocompletion
      - ❌ Autocomplete in buffer
      - ✅ Autocomplete in minibuffer
    - ⚠️ Make Emacs look pretty

@@ -4,10 +4,11 @@
 #+lastmod: <2023-11-12 Sun>
 #+author: Justin Barclay
 #+description: How to automate git-sync by creating an Emacs minor mode
+#+series[]: sharpening-your-toolshed
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
-#+tags[]: emacs git minor-mode sharpening-your-toolshed
+#+tags[]: emacs git minor-mode toolshed
 
 @@html:<div class="banner-image">@@
 #+attr_html: :alt "Two programmers sharpening the first toolshed"

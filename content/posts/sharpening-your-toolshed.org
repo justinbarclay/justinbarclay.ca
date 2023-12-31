@@ -1,14 +1,15 @@
 #+TITLE: Sharpening Your Toolshed
 #+date: <2023-10-23 Mon>
 #+author: Justin Barclay
-#+description: An introduction to new series
+#+description: An introduction
+#+series[]: sharpening-your-toolshed
 #+section: ./posts
 #+weight: 2001
 #+auto_set_lastmod: t
-#+tags[]: sharpening-your-toolshed
+#+tags[]: toolshed
 
 @@html:<figure>@@
 @@html:<img alt="Be the change you want to see."src="/images/be-the-change-you-want-to-see.webp" style="width:500px;max-width:100%;">@@
 @@html:</figure>@@
 
-There is a lot of content out there that teaches you how a language or framework works by building a simple toy app. However, I want to see how people use their languages of choice to build things for themselves. I want to see how people sharpen their tools. I want to see how people build things to make their lives easier. And so, I decided to be the change I wanted to see.
+There is a lot of content out there that teaches you how a language or framework works by building a simple toy app. However, I want to see how people use their languages of choice to build things for themselves. I want to see how people sharpen their tools. I want to see how people build things to make their lives easier. And so, I decided to be the [[/series/sharpening-your-toolshed][change]] I wanted to see.

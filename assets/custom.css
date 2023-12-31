@@ -23,7 +23,15 @@ table {
 }
 
 body.colorscheme-light table * {
-  border-color: #fff;
+  border-color: #212121;
+  color: #000;
+  background: #f0f0f0;
+}
+
+body.colorscheme-light table.color-palette * {
+  color: #fff;
+  border-color: #f0f0f0;
+  background: #282a36;
 }
 
 thead {
