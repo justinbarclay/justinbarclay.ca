@@ -1,0 +1,391 @@
+#+OPTIONS: ^:nil toc:nil
+#+title: Sharpening Your Toolshed: Applying spit-shine to git-sync
+#+date: <2024-02-04 Sun>
+#+author: Justin Barclay
+#+description: Improving the user experience of git-sync-mode
+#+series[]: sharpening-your-toolshed
+#+section: ./posts
+#+weight: 2001
+#+auto_set_lastmod: t
+#+tags[]: emacs git minor-mode toolshed
+
+There are three things that still annoy me with my git-sync mode:
+
+1. The ~git-sync~ process buffer shows ~^M~ rather than a new line
+2. There is no way to ignore files in a directory or project
+3. ~git-sync~ requires a bash shell script to run.
+
+** Processing the process output
+When I run git-sync in a buffer, sometimes I get lines that sprinkle ~^M~ everywhere:
+#+begin_src shell
+  #...
+  Counting objects:  20% (1/5)Counting objects:  40% (2/5)Counting objects:  60% (3/5)Counting objects:  80% (4/5)Counting objects: 100% (5/5)Counting objects: 100% (5/5), done.
+  Delta compression using up to 8 threads
+  Compressing objects:  33% (1/3)Compressing objects:  66% (2/3)Compressing objects: 100% (3/3)Compressing objects: 100% (3/3), done.
+  Writing objects:  33% (1/3)Writing objects:  66% (2/3)Writing objects: 100% (3/3)Writing objects: 100% (3/3), 555 bytes | 555.00 KiB/s, done.
+  Total 3 (delta 2), reused 0 (delta 0), pack-reused 0
+  remote: Resolving deltas:   0% (0/2)        remote: Resolving deltas:  50% (1/2)        remote: Resolving deltas: 100% (2/2)        remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+  #...
+#+end_src
+
+I know Emacs has the [[https://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/ansi-color.el][~ansi-color~]] library to handle adding [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Faces.html][faces]] to terminal output and Emacs does some [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Default-Coding-Systems.html][default handling]] of ANSI escape characters. However, I haven't found one that handles hiding things like ~^M~ when they show up.
+
+I'm too lazy to emulate the ~^M~, [[https://en.wikipedia.org/wiki/Carriage_return][carriage return]], properly. Instead, I'll try to emulate a dumb terminal and treat ~^M~ as a newline.
+
+First, I need to move the cursor to the beginning of the buffer
+#+begin_src elisp
+(goto-char (point-min))
+#+end_src
+
+and then run a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Regexp-Replace.html][regex replace]]
+#+begin_src elisp
+(replace-regexp "
+" "
+  " (point-min) (point-max))
+#+end_src
+
+If you remember from my previous post on git-sync, there is a [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Sentinels.html][sentinel function]] that is called whenever new input is received from the process.
+
+#+begin_src elisp
+  (defun git-sync--sentinel-fn (process event)
+    (with-current-buffer (process-buffer process)
+      (special-mode))) 
+#+end_src
+
+So, all I need to do is run the extend that function, and I'll have a prettier buffer.
+#+begin_src elisp
+  (defun git-sync--sentinel-fn (process event)
+    "Sentinel function for the git-sync process."
+    (with-current-buffer (process-buffer process)
+      (read-only-mode -1)
+      (replace-regexp-in-region "
+" "
+   " (point-min) (point-max))
+      (goto-char (point-min))
+      (special-mode)))
+#+end_src
+
+** Ignoring the ignoble
+My next line item is to create allow and deny lists that can be altered using ~M-x~ commands.
+
+*** But make it customizable
+To store our lists, we could use [[https://www.gnu.org/software/emacs/manual/html_node/eintr/Using-setq.html][~setq~]].
+#+begin_src elisp
+(setq git-sync-allow-list '())
+#+end_src
+
+But this is uncouth and would have you looked down upon in the more refined circles. So, I prefer to never variables with ~setq~; ~setq~ is for _modifying_ variables only.
+
+I could be a bit more civilized and use [[https://www.gnu.org/software/emacs/manual/html_node/eintr/defvar.html][~defvar~]]. It allows me to add a comment to describe what the variable is for.
+#+begin_src elisp
+  (defvar git-sync-allow-list '() "A list of directories and files that git sync is allowed to run in")
+#+end_src
+
+That means users could use ~M-x describe-variable~ to see what the variable stores.
+
+Or, I could be my best self and use [[https://www.gnu.org/software/emacs/manual/html_node/eintr/defcustom.html][~defcustom~]]. This tells Emacs that the variable represents a user-configurable setting and that it should show up in Emacs' [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Easy-Customization.html][customization UI]]. The example below allows users to find the setting using the ~M-x customize-option thing~.
+#+begin_src elisp
+(defcustom thing '()
+"A thing")
+#+end_src
+
+Customization widgets can get pretty [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Customization.html#Customization][complex]], but I only care about the ~:type~ and ~:group~ configurations. [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Group-Definitions.html][~:group~]] is a way to cluster similar options within Emacs' customize UI. For example, say a package maintainer wanted to make it so users could see all the possible customizations for their package on one page.
+#+begin_src elisp
+  (defgroup git-sync
+    nil
+    "Customizations for git-sync")
+#+end_src
+
+Meanwhile, [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Customization-Types.html][:type]] specifies the type of widget that Emacs will present to the user. For example, you could specify the ~'directory~ type to say that you want Emacs to create a widget that helps users select a directory. Or I could say ~'(repeat directory)~ to say that it should allow the user to enter more than one directory in the UI.
+
+#+begin_src elisp
+  (defcustom git-sync-allow-list '()
+    "A list of files that git-sync is allowed to run in. In case of conflict with the deny-list, the deny-list wins out."
+    :type '(repeat directory)
+    :group 'git-sync)
+#+end_src
+
+I also want to allow users to specify a deny list.
+#+begin_src elisp
+  (defcustom git-sync-deny-list
+    '()
+    "A list of files that git-sync is not allowed to run in. In case of conflict with the allow-list, the deny-list wins out."
+    :type '(repeat directory)
+    :group 'git-sync)
+#+end_src
+
+[[/images/git-sync-customize.png]]
+
+*** Through Interactivity
+Then I need to add some [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Using-Interactive.html][interactive commands]] to add directories to the allow and deny lists
+
+#+begin_src elisp
+  (defun git-sync-add-to-allow-list ()
+    "Add the folder of the current buffer to `git-sync-allow-list'"
+    (interactive)
+    (add-to-list 'git-sync-allow-list (file-name-directory buffer-file-name)))
+
+  (defun git-sync-add-to-deny-list ()
+    "Add the folder of the current buffer to `git-sync-allow-list'"
+    (interactive)
+    (add-to-list 'git-sync-deny-list (file-name-directory buffer-file-name)))
+#+end_src
+
+However, this isn't quite the right UX. Rather than assuming that the user means the current directory, I'd like the user to select the file or directory they want. For that, I'd use the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Minibuffer-Completion.html][completing-read]] function [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Reading-Directory-Names.html][read-directory-name]]. I can feed it a prompt for the user and then have the user select the current directory, which is the default behaviour, or they can interactively select the directory.
+#+begin_src elisp
+  (read-directory-name "This is the prompt")
+#+end_src
+
+Putting this together, we get
+#+begin_src elisp
+  (defun git-sync-add-to-allow-list ()
+    "Add directory to the `git-sync-allow-list'."
+    (interactive)
+    (add-to-list 'git-sync-allow-list (read-directory-name "Directory to add to git-sync-allow-list: ")))
+
+  (defun git-sync-add-to-deny-list ()
+    "Add directory to the `git-sync-deny-list'."
+    (interactive)
+    (add-to-list 'git-sync-allow-list (read-directory-name "Directory to add to git-sync-deny-list: ")))
+#+end_src
+
+I can also use a similar trick with ~completing-read~ to remove items from these lists. Completing read takes a ~prompt~ and a ~collection~ for the user to choose from and then returns the user's selection.
+#+begin_src elisp
+(completing-read prompt collection)
+#+end_src
+
+So, for my use case, I can use the user's choice alongside the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Sets-And-Lists.html][~remove~]] function to remove their choice from the allow or deny list.
+#+begin_src elisp
+  (defun git-sync-remove-from-allow-list ()
+    "Remove an item from the `git-sync-allow-list'"
+    (setq git-sync-allow-list (remove (completing-read
+                                       "Select the item to remove: "
+                                       git-sync-allow-list))))
+
+  (defun git-sync-remove-from-deny-list ()
+      "Remove an item from the `git-sync-deny-list'"
+      (setq git-sync-deny-list (remove (completing-read
+                                         "Select the item to remove: "
+                                         git-sync-deny-list))))
+#+end_src
+
+** Unshelling git sync
+And now the piece de resistance. ~git-sync-mode~ relies on a shell script, which limits the portability of this mode. It will only work *Nix systems. Meanwhile, in theory, Emacs _can_ do the basics of what we want out of ~git-sync~. It can tell git to stage files, commit them to the repo, and fetch or push the changes.
+
+In short, the steps look something like this
+#+begin_src shell
+git add .
+git commit -m "changes from Heimdall.localdomain on Wed Jan 24 09:29:28 PST 2024"
+git pull
+git push
+#+end_src
+
+If you remember, earlier in the series, we can do the same with Elisp. First, we start by creating a shell process.
+#+begin_src elisp
+(make-process :name "git-sync"
+                    :buffer (get-buffer-create "*git-sync*")
+                    :command '("git" "status")
+                    :sentinel 'git-sync--sentinel-fn)
+#+end_src
+
+But we want to call several git commands in a row, not just once. Can we be lazy and concatenate the four lines into one list?
+
+
+For readability, I'll use append
+#+begin_src elisp
+  (append '("git" "add" ".") '(";")
+          '("git" "commit"" \"-m" "\"Some message\"") '(";")
+          '("git" "pull") '(";")
+          '("git" "push"))
+#+end_src
+
+Which Emacs evaluates to
+#+begin_src elisp
+("git" "add" "." ";" "git" "commit" " \"-m" "\"Some message\"" ";" "git" "pull" ";" "git" "push")
+#+end_src
+
+If I wrote this as a shell command, it would work, but does it work for Emacs when it tries to run it as a process?
+
+In essence, will this work?
+#+begin_src elisp
+  (let ((command (append '("git" "add" ".") '(";")
+            '("git" "commit"" \"-m" "\"changes from Heimdall.localdomain on Wed Jan 24 09:29:28 PST 2024\"") '(";")
+            '("git" "pull") '(";")
+            '("git" "push") '(";"))))
+    (make-process :name "git-sync"
+                  :buffer (get-buffer-create "*git-sync*")
+                  :command command
+                  :sentinel 'git-sync--sentinel-fn))
+#+end_src
+
+Unfortunately, in the ~*git-sync*~ buffer, I get the following error
+#+begin_quote
+fatal: pathspec ';' did not match any files
+#+end_quote
+
+I guess running commands in a process through Emacs differs from running commands through a shell.
+
+Instead, I'll use an [[https://github.com/chuntaro/emacs-async-await][async]] package called ~emacs-async-await~. I'll forego an explanation on how to install ~async-await~, but it is available on [[https://melpa.org/#/async-await][Melpa]].
+#+begin_src elisp
+  (require 'async-await)
+  (setq lexical-binding 't)
+#+end_src
+
+If you're familiar with [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise][Promises]] in Javascript, then you should be able to understand the basics of how this works.
+#+begin_src elisp
+  (promise-then
+   (promise-new (lambda (resolve reject)
+                  (funcall resolve "done")))
+   (lambda (status)
+     (message "%s" status)))
+#+end_src
+
+#+begin_quote
+Did you know that Emacs is a [[http://www.nhplace.com/kent/Papers/Technical-Issues.html][Lisp 2]]? That's why we have to call [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Calling-Functions.html#index-funcall][~funcall~]] on resolve.
+#+end_quote
+
+So we can promisify ~git-sync--execute~ function.
+
+#+begin_src elisp
+  (defun git-sync--execute ()
+    (promise-new (resolve reject)
+       (make-process :name "git-sync"
+                     :buffer (get-buffer-create "*git-sync*")
+                     :command '("git" "status")
+                     :sentinel 'git-sync--sentinel-fn)))
+#+end_src
+
+But we'll need to wrap our sentinel-fn so we can call resolve
+
+#+begin_src elisp
+  (defun git-sync--execute ()
+    (promise-new (lambda (resolve reject)
+                   (let ((sentinel-fn (lambda (process event)
+                                        (git-sync--sentinel-fn process event)
+                                        (funcall resolve event))))
+                     (make-process :name "git-sync"
+                                   :buffer (get-buffer-create "*git-sync*")
+                                   :command '("git" "status")
+                                   :sentinel sentinel-fn)))))
+
+  (promise-then (git-sync--execute)
+                (lambda (status)
+                  (message "%s" status)))
+#+end_src
+
+Now, I want to make the command the argument to ~git-sync--execute~. Let's also rename it because it won't be the primary entry point and doesn't deserve something as simple as ~execute~
+#+begin_src elisp
+  (defun git-sync--execute-command (command)
+    (promise-new (lambda (resolve reject)
+                   (let ((sentinel-fn (lambda (process event)
+                                        (with-current-buffer (process-buffer process)
+                                          (special-mode)
+                                          (funcall resolve event)))))
+                     (make-process :name "git-sync"
+                                   :buffer (get-buffer-create "*git-sync*")
+                                   :command command
+                                   :sentinel sentinel-fn)))))
+
+  (promise-then (git-sync--execute '("git" "status"))
+                (lambda (status)
+                  (message "%s" status)))
+#+end_src
+
+Finally, I can sprinkle in some await magic
+#+begin_src elisp
+  (async-defun git-sync--execute ()
+    (await (git-sync--execute-command '("git" "add" ".")))
+    (await (git-sync--execute-command '("git" "commit" "-m" "\"changes from Heimdall.localdomain on Wed Jan 24 09:29:28 PST 2024\"")))
+    (await (git-sync--execute-command '("git" "pull")))
+    (await (git-sync--execute-command '("git" "push"))))
+
+  (git-sync--execute)
+#+end_src
+
+** Bonus Commit Message
+
+I need to customize the commit message generated, and it can't just be a static string of my machine name and timestamp. Instead, I can use 
+
+#+begin_src elisp
+  (format "changes from %s on %s" (system-name) (current-time-string))
+#+end_src
+
+Which gets us
+#+begin_quote
+ changes from Heimdall.localdomain on Mon Jan 29 22:04:09 2024
+#+end_quote
+** Summary
+Now, I've got most of the usability gripes with this package resolved. 
+#+begin_src elisp
+  (require 'async-await)
+
+  (defgroup git-sync
+    nil
+    "Customizations for git-sync")
+
+  (defcustom git-sync-allow-list '()
+    "A list of files that git-sync is allowed to run in. In case of conflict with the deny-list, the deny-list wins out."
+    :type '(repeat director)
+    :group 'git-sync)
+
+  (defcustom git-sync-deny-list
+    '()
+    "A list of files that git-sync is not allowed to run in. In case of conflict with the allow-list, the deny-list wins out."
+    :type '(repeat directory)
+    :group 'git-sync)
+
+  (defun git-sync--commit-message ()
+    (format "\"changes from %s on %s \"" (system-name) (current-time-string)))
+
+  (defun git-sync--sentinel-fn (process event)
+    "Sentinel function for the git-sync process."
+    (with-current-buffer (process-buffer process)
+      (read-only-mode -1)
+      (replace-regexp-in-region "
+" "
+     " (point-min) (point-max))
+      (goto-char (point-min))
+      (special-mode)))
+  (defun git-sync--execute-command (command)
+    "Execute `COMMAND' as a promise in the git-sync buffer.
+
+  The promise returns the event passed in by the sentinel functions."
+    (promise-new (lambda (resolve reject)
+                   (let ((sentinel-fn (lambda (process event)
+                                        (git-sync--sentinel-fn process event)
+                                        (funcall resolve event))))
+                     (make-process :name "git-sync"
+                                   :buffer (get-buffer-create "*git-sync*")
+                                   :command command
+                                   :sentinel sentinel-fn)))))
+
+  (async-defun git-sync--execute ()
+    (await (git-sync--execute-command '("git" "add" ".")))
+    (await (git-sync--execute-command (list "git" "commit" "-m" (git-sync--commit-message))))
+    (await (git-sync--execute-command '("git" "pull")))
+    (await (git-sync--execute-command '("git" "push"))))
+
+  (defun git-sync-add-to-allow-list ()
+    "Add directory to the `git-sync-allow-list'."
+    (interactive)
+    (add-to-list 'git-sync-allow-list (read-directory-name "Directory to add to git-sync-allow-list: ")))
+
+  (defun git-sync-add-to-deny-list ()
+    "Add directory to the `git-sync-deny-list'."
+    (interactive)
+    (add-to-list 'git-sync-allow-list (read-directory-name "Directory to add to git-sync-deny-list: ")))
+
+  (defun git-sync-remove-from-allow-list ()
+    "Remove an item from the `git-sync-allow-list'."
+    (setq git-sync-allow-list (remove (completing-read
+                                       "Select the item to remove: "
+                                       git-sync-allow-list))))
+
+  (defun git-sync-remove-from-deny-list ()
+    "Remove an item from the `git-sync-deny-list'."
+    (setq git-sync-deny-list (remove (completing-read
+                                      "Select the item to remove: "
+                                      git-sync-deny-list))))
+#+end_src
+
+My next question is, can I publish this to Melpa?
