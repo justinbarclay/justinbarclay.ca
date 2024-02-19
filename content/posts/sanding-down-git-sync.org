@@ -1,5 +1,5 @@
 #+OPTIONS: ^:nil toc:nil
-#+title: Sharpening Your Toolshed: Applying spit-shine to git-sync
+#+title: Sharpening Your Toolshed: Sanding down the rough edges of git-sync
 #+date: <2024-02-04 Sun>
 #+author: Justin Barclay
 #+description: Improving the user experience of git-sync-mode
@@ -8,6 +8,10 @@
 #+weight: 2001
 #+auto_set_lastmod: t
 #+tags[]: emacs git minor-mode toolshed
+
+@@html:<div class="banner-image">@@
+@@html:<img style="max-height:700px" alt="A dark, surreal scene inspired by H.R. Giger, depicting two humanoid figures in a biomechanical environment, using Emacs and Git to automatically sync their work. The figures are connected to a network of organic-looking cables and machinery, with their fingers fused into the keyboard, seamlessly blending technology and biology. The screens in front of them display code and Git commands, surrounded by an eerie glow. The atmosphere is filled with a sense of advanced, alien technology, as the figures work in harmony, their actions synchronized through the Git repository." src="/images/geigeresque-depiction-of-git-sync-mode.webp"/>@@
+@@html:</div>@@
 
 There are three things that still annoy me with my git-sync mode:
 
@@ -19,16 +23,16 @@ There are three things that still annoy me with my git-sync mode:
 When I run git-sync in a buffer, sometimes I get lines that sprinkle ~^M~ everywhere:
 #+begin_src shell
   #...
-  Counting objects:  20% (1/5)Counting objects:  40% (2/5)Counting objects:  60% (3/5)Counting objects:  80% (4/5)Counting objects: 100% (5/5)Counting objects: 100% (5/5), done.
+  Counting objects:  20% (1/5)^MCounting objects:  40% (2/5)^MCounting objects:  60% (3/5)^MCounting objects:  80% (4/5)^MCounting objects: 100% (5/5)^MCounting objects: 100% (5/5), done.
   Delta compression using up to 8 threads
-  Compressing objects:  33% (1/3)Compressing objects:  66% (2/3)Compressing objects: 100% (3/3)Compressing objects: 100% (3/3), done.
-  Writing objects:  33% (1/3)Writing objects:  66% (2/3)Writing objects: 100% (3/3)Writing objects: 100% (3/3), 555 bytes | 555.00 KiB/s, done.
+  Compressing objects:  33% (1/3)^MCompressing objects:  66% (2/3)^MCompressing objects: 100% (3/3)^MCompressing objects: 100% (3/3), done.
+  Writing objects:  33% (1/3)^MWriting objects:  66% (2/3)^MWriting objects: 100% (3/3)^MWriting objects: 100% (3/3), 555 bytes | 555.00 KiB/s, done.
   Total 3 (delta 2), reused 0 (delta 0), pack-reused 0
-  remote: Resolving deltas:   0% (0/2)        remote: Resolving deltas:  50% (1/2)        remote: Resolving deltas: 100% (2/2)        remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+  remote: Resolving deltas:   0% (0/2)        ^Mremote: Resolving deltas:  50% (1/2)        ^Mremote: Resolving deltas: 100% (2/2)        ^Mremote: Resolving deltas: 100% (2/2), completed with 2 local objects.
   #...
 #+end_src
 
-I know Emacs has the [[https://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/ansi-color.el][~ansi-color~]] library to handle adding [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Faces.html][faces]] to terminal output and Emacs does some [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Default-Coding-Systems.html][default handling]] of ANSI escape characters. However, I haven't found one that handles hiding things like ~^M~ when they show up.
+I know Emacs has the [[https://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/ansi-color.el][ansi-color]] library to handle adding [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Faces.html][faces]] to terminal output and Emacs does some [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Default-Coding-Systems.html][default handling]] of ANSI escape characters. However, I haven't found one that handles hiding things like ~^M~ when they show up.
 
 I'm too lazy to emulate the ~^M~, [[https://en.wikipedia.org/wiki/Carriage_return][carriage return]], properly. Instead, I'll try to emulate a dumb terminal and treat ~^M~ as a newline.
 
@@ -44,7 +48,7 @@ and then run a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Regex
   " (point-min) (point-max))
 #+end_src
 
-If you remember from my previous post on git-sync, there is a [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Sentinels.html][sentinel function]] that is called whenever new input is received from the process.
+If you remember from my previous post on [[/posts/automating-git-sync-part-2][git-sync]], there is a [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Sentinels.html][sentinel function]] that is called whenever new input is received from the process.
 
 #+begin_src elisp
   (defun git-sync--sentinel-fn (process event)
@@ -52,7 +56,7 @@ If you remember from my previous post on git-sync, there is a [[https://www.gnu.
       (special-mode))) 
 #+end_src
 
-So, all I need to do is run the extend that function, and I'll have a prettier buffer.
+So, all I need to do is extend that function, and I'll have a prettier buffer.
 #+begin_src elisp
   (defun git-sync--sentinel-fn (process event)
     "Sentinel function for the git-sync process."
@@ -74,7 +78,7 @@ To store our lists, we could use [[https://www.gnu.org/software/emacs/manual/htm
 (setq git-sync-allow-list '())
 #+end_src
 
-But this is uncouth and would have you looked down upon in the more refined circles. So, I prefer to never variables with ~setq~; ~setq~ is for _modifying_ variables only.
+But this is uncouth and would have you looked down upon in the more refined circles. So, I prefer to never define variables with ~setq~; ~setq~ is for _modifying_ variables only.
 
 I could be a bit more civilized and use [[https://www.gnu.org/software/emacs/manual/html_node/eintr/defvar.html][~defvar~]]. It allows me to add a comment to describe what the variable is for.
 #+begin_src elisp
@@ -89,7 +93,7 @@ Or, I could be my best self and use [[https://www.gnu.org/software/emacs/manual/
 "A thing")
 #+end_src
 
-Customization widgets can get pretty [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Customization.html#Customization][complex]], but I only care about the ~:type~ and ~:group~ configurations. [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Group-Definitions.html][~:group~]] is a way to cluster similar options within Emacs' customize UI. For example, say a package maintainer wanted to make it so users could see all the possible customizations for their package on one page.
+Customization widgets can get pretty [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Customization.html#Customization][complex]], but I only care about the ~:type~ and ~:group~ configurations. [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Group-Definitions.html][:group]] is a way to cluster similar options within Emacs' customize UI. For example, say a package maintainer wanted to make it so users could see all the possible customizations for their package on one page.
 #+begin_src elisp
   (defgroup git-sync
     nil
@@ -170,7 +174,7 @@ So, for my use case, I can use the user's choice alongside the [[https://www.gnu
 #+end_src
 
 ** Unshelling git sync
-And now the piece de resistance. ~git-sync-mode~ relies on a shell script, which limits the portability of this mode. It will only work *Nix systems. Meanwhile, in theory, Emacs _can_ do the basics of what we want out of ~git-sync~. It can tell git to stage files, commit them to the repo, and fetch or push the changes.
+And now the piece de resistance. ~git-sync-mode~ relies on a shell script, which limits the portability of this mode. It will only work on *Nix systems. Meanwhile, in theory, Emacs _can_ do the basics of what we want out of ~git-sync~. It can tell git to stage files, commit them to the repo, and fetch or push the changes.
 
 In short, the steps look something like this
 #+begin_src shell
