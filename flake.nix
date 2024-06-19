@@ -15,7 +15,8 @@
         pkgs = nixpkgs.legacyPackages.${system};
         # Normally this is something that is set as a git submodule
         # for hugo projects. But nix doesn't have access to the git
-        # state of our project. So we make a custom derivation, skip the build phase and wholesale copy source directory
+        # state of our project. So we make a custom derivation, skip 
+        # the build phase and wholesale copy source directory
         hugo-coder = pkgs.stdenv.mkDerivation
           {
             name = "hugo-coder";
@@ -53,8 +54,6 @@
             hugo
           ];
 
-          # Using git submodule init here is an antipractice but I am being quick and dirty
-          # and doing it right is a _lot_ more work
           buildPhase = ''
             export HUGO_ENV=production
             work=$(mktemp -d)
@@ -65,7 +64,6 @@
           # This is the output of the derivation.  You should see this
           # in the ./result folder when building locally
           installPhase = ''
-
             cp -r $work/public $out
           '';
         };
