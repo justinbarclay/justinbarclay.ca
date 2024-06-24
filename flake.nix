@@ -6,42 +6,74 @@
     nixpkgs = {
       url = "nixpkgs/nixos-unstable";
     };
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs }:
-    let
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        # Normally this is something that is set as a git submodule
+        # for hugo projects. But nix doesn't have access to the git
+        # state of our project. So we make a custom derivation, skip 
+        # the build phase and wholesale copy source directory
+        hugo-coder = pkgs.stdenv.mkDerivation
+          {
+            name = "hugo-coder";
+            # It's important to use the same revision as is specified
+            # in your submodule
+            rev = "5c2476be1c29563b6dd06c15fb9206d2ca50efae";
+            src = pkgs.fetchFromGitHub {
+              owner = "luizdepra";
+              repo = "hugo-coder";
+              rev = "5c2476be1c29563b6dd06c15fb9206d2ca50efae";
+              # To get this sha use AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+              # and nix will tell you
+              sha256 = "v0t7DVCml7pv7gU0IDy/xr61d/ohfC1xwzXYsVUoC+g=";
+            };
 
-      # to work with older version of flakes
-      lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+            # We want to skip the buildPhase because there is nothing to build.
+            # for more info https://nixos.org/manual/nixpkgs/unstable/#sec-stdenv-phases
+            phases = [ "unpackPhase" "installPhase" ];
 
-      # Generate a user-friendly version number.
-      version = builtins.substring 0 8 lastModifiedDate;
+            # We use hugo-coder because for whatever hugo was
+            # complaining about this and I didn't care to figure it
+            # out or fix it.
+            installPhase = ''
+              mkdir -p $out/hugo-coder
+              cp -r $src/* $out/hugo-coder
+            '';
 
-      # System types to support.
-      supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-
-      # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-
-      # Nixpkgs instantiated for supported system types.
-      nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
-
-    in
-    {
-      # Add dependencies that are only needed for development
-      devShells = forAllSystems (system:
-        let
-          pkgs = nixpkgsFor.${system};
-        in
-        {
-          default = pkgs.mkShell {
-            buildInputs = with pkgs; [ hugo ];
           };
-        });
 
-      # The default package for 'nix build'. This makes sense if the
-      # flake provides only one package or there is a clear "main"
-      # package.
-      # defaultPackage = forAllSystems (system: self.packages.${system}.go-hello);
-    };
+        blog = pkgs.stdenv.mkDerivation {
+          name = "justinbarclay.ca";
+          version = "1.0.0";
+          src = ./.;
+          buildInputs = with pkgs; [
+            hugo
+          ];
+
+          buildPhase = ''
+            export HUGO_ENV=production
+            work=$(mktemp -d)
+            cp -r $src/* $work
+            (cd $work && hugo --themesDir=${hugo-coder} --minify)
+          '';
+
+          # This is the output of the derivation.  You should see this
+          # in the ./result folder when building locally
+          installPhase = ''
+            cp -r $work/public $out
+          '';
+        };
+      in
+      {
+        # Add dependencies that are only needed for development
+        packages.blog = blog;
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [ hugo ];
+        };
+      }
+    );
 }
