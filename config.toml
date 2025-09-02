@@ -6,12 +6,13 @@ defaultcontentlanguage = "en"
 
 ignoreFiles = [ "literate_programming_against_rest_apis.org"]
 
-paginate = 20
-
 pygmentsstyle = "dracula"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 enableRobotsTXT = true
+
+[pagination]
+pagerSize = 20
 
 [params]
   author = "Justin Barclay"
@@ -74,6 +75,8 @@ enableRobotsTXT = true
   url = "about/"
 
 [markup]
+[markup.goldmark]
+  renderer.unsafe = true
 [markup.goldmark.parser.attribute]
-block = true
-title = true
+  block = true
+  title = true

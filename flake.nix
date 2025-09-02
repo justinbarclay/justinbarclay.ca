@@ -15,21 +15,21 @@
         pkgs = nixpkgs.legacyPackages.${system};
         # Normally this is something that is set as a git submodule
         # for hugo projects. But nix doesn't have access to the git
-        # state of our project. So we make a custom derivation, skip 
+        # state of our project. So we make a custom derivation, skip
         # the build phase and wholesale copy source directory
         hugo-coder = pkgs.stdenv.mkDerivation
           {
             name = "hugo-coder";
             # It's important to use the same revision as is specified
             # in your submodule
-            rev = "5c2476be1c29563b6dd06c15fb9206d2ca50efae";
+            rev = "cb13ec4671611990420f29321c4430e928a67518";
             src = pkgs.fetchFromGitHub {
               owner = "luizdepra";
               repo = "hugo-coder";
-              rev = "5c2476be1c29563b6dd06c15fb9206d2ca50efae";
+              rev = "cb13ec4671611990420f29321c4430e928a67518";
               # To get this sha use AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
               # and nix will tell you
-              sha256 = "v0t7DVCml7pv7gU0IDy/xr61d/ohfC1xwzXYsVUoC+g=";
+              sha256 = "hYst/Y2BnuZvYd6TX35YhQz3JzhD5jXD5FXp30+/QPw=";
             };
 
             # We want to skip the buildPhase because there is nothing to build.
@@ -72,7 +72,7 @@
         # Add dependencies that are only needed for development
         packages.blog = blog;
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ hugo ];
+          packages = with pkgs; [ hugo go ];
         };
       }
     );
