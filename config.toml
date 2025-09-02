@@ -6,12 +6,13 @@ defaultcontentlanguage = "en"
 
 ignoreFiles = [ "literate_programming_against_rest_apis.org"]
 
-paginate = 20
-
 pygmentsstyle = "dracula"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 enableRobotsTXT = true
+
+[pagination]
+pagerSize = 20
 
 [params]
   author = "Justin Barclay"
@@ -46,12 +47,12 @@ enableRobotsTXT = true
 # Social links
 [[params.social]]
   name = "Github"
-  icon = "fa fa-github fa-2x"
+  icon = "fa-brands fa-github fa-2x"
   weight = 1
   url = "https://github.com/justinbarclay/"
 [[params.social]]
   name = "Mastodon"
-  icon = "fa fa-mastodon fa-2x"
+  icon = "fa-brands fa-mastodon fa-2x"
   weight = 2
   rel = "me"
   url = "https://hachyderm.io/@newplagiarist"
@@ -74,6 +75,8 @@ enableRobotsTXT = true
   url = "about/"
 
 [markup]
+[markup.goldmark]
+  renderer.unsafe = true
 [markup.goldmark.parser.attribute]
-block = true
-title = true
+  block = true
+  title = true
