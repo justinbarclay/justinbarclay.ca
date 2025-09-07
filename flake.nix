@@ -72,7 +72,7 @@
         # Add dependencies that are only needed for development
         packages.blog = blog;
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ hugo go ];
+          packages = with pkgs; [ hugo wrangler ];
         };
       }
     );
