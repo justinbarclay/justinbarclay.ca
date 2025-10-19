@@ -1,0 +1,94 @@
+#+OPTIONS: ^:nil toc:nil
+#+title: If You're Reading This, I've Moved to Cloudflare
+#+date: [2025-10-19 Sun]
+#+description: The insignificant reason that I moved my blog from Netlify to Cloudflare.
+#+section: ./posts
+#+auto_set_lastmod: t
+#+weight: 2001
+#+tags[]: hosting,cloudflare,netlify,ai,hugo
+
+#+begin_quote
+tldr: Netlify's marketing is annoying, so I'm switching to Cloudflare.
+#+end_quote
+
+#+attr_html: :width 100% :alt "A group of birds migrating"
+[[/images/ahmed-pDCmyziM9wc-unsplash.jpg]]
+#+attr_html: :class notice note
+#+begin_quote
+Photo by [[https://unsplash.com/@mutecevvil?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText][Ahmed]] on [[https://unsplash.com/photos/a-large-group-of-airplanes-flying-in-the-sky-pDCmyziM9wc?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText][Unsplash]]
+#+end_quote
+
+
+I've always loved free, no-fuss services for hosting my website. I started with Vercel before they were evil, then I moved to Netlify just as they were getting evil. Both services made publishing a barely active blog a breeze. They took care of building and deploying my Hugo blog and left me to focus on the part where I never write anything.
+
+#+begin_quote
+Having a blog is a lot like having a bookshelf; it's full of the hope of accomplishing more.
+#+end_quote
+
+Unfortunately, about a year after I moved to Netlify, they started going all-in on AI features.
+
+#+NAME: Netlify 💘 AI
+[[/images/2025-09-01_23-07-45_netlify-plus-ai-k-i-s-s-i-n-g.png]]
+
+And as time has passed, they've only gone harder.
+
+However, I do not enjoy AI, and I think its current success is built on profiting from [[https://jskfellows.stanford.edu/theft-is-not-fair-use-474e11f0d063][stolen work]]. This wouldn't be a problem for me if these models were open source and free to run, just like much of the work they were trained on. However, that isn't the case, and I want to make my work as difficult for AI to consume as possible.
+
+#+begin_quote
+Some may argue my work is already a poison pill for AI.
+#+end_quote
+
+On a recent(ish) episode of [[https://atp.fm/650][ATP]], they discussed [[https://www.cloudflare.com][Cloudflare's]] new anti-AI [[https://developers.cloudflare.com/bots/additional-configurations/ai-labyrinth/][crawling]] [[https://developers.cloudflare.com/bots/additional-configurations/ja3-ja4-fingerprint/][tools]].
+
+While Netlify has its own guide on [[https://developers.netlify.com/guides/blocking-ai-bots-and-controlling-crawlers/][blocking AI]], it uses =robots.txt= and then recommends using =edge functions= to block them even more [[https://developers.netlify.com/guides/blocking-ai-bots-and-controlling-crawlers/#blocking-http-requests-based-on-the-user-agent-string-using-an-edge-function][harder]]. I don't want to have to run my own JS (or code in general); this is what I want to (not) pay someone else for.
+
+#+begin_quote
+I know that switching from one AI vendor to another is a token effort at best. However, I am happy to cut off my nose to spite my face, and I'll continue spiting my face until Cloudflare does something else egregious that forces me to rebel against them, too.
+#+end_quote
+
+** Moving from Netlify to Cloudflare
+#+begin_quote
+Current as of September 7th, 2025
+#+end_quote
+1. Make sure your Hugo config isn't 1.5 years out of date
+2. Follow the multi-step setup instructions for setting up a [[https://developers.cloudflare.com/workers/get-started/guide/][Cloudflare Worker]]
+   #+begin_quote
+   Don't fall for the Netlify to Cloudflare [[https://developers.cloudflare.com/pages/migrations/migrating-from-netlify/][guide]], it's 3 years out of date.
+   #+end_quote
+3. Add Hugo-specific config for Hugo
+   a) You could use Hugo's suggested [[https://gohugo.io/host-and-deploy/host-on-cloudflare/][setup]]
+   b) You could throw caution to the wind and use the built-in Hugo for Cloudflare worker
+   #+NAME: wrangler.toml
+   #+begin_src toml
+   # Configure Cloudflare Worker
+
+   name = "hosting-cloudflare-worker"
+   compatibility_date = "2025-07-31"
+
+   [build]
+   command = "hugo --gc --minify"
+
+   [assets]
+   directory = "./public"
+   not_found_handling = "404-page"
+   #+end_src
+4. Add wrangler to your [[https://nix.dev/concepts/flakes.html][flake]]
+   #+begin_src diff
+   diff --git a/flake.nix b/flake.nix
+   index 35bb12b..1bd297b 100644
+   --- a/flake.nix
+   +++ b/flake.nix
+   @@ -72,7 +72,7 @@
+            # Add dependencies that are only needed for development
+            packages.blog = blog;
+            devShells.default = pkgs.mkShell {
+   -          packages = with pkgs; [ hugo go ];
+   +          packages = with pkgs; [ hugo wrangler ];
+            };
+          }
+        );
+   #+end_src
+5. Have wrangler get mad at you for naming your worker setup [[https://github.com/justinbarclay/justinbarclay.ca/pull/12][wrong]].
+6. Switch your DNS over to Cloudflare from Netlify.
+** Alternative
+If I wanted to manage my own infrastructure, I could use [[https://github.com/TecharoHQ/anubis][Anubis]], but as I've already said, I want to manage _no infrastructure_ whatsoever.
